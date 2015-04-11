@@ -1,0 +1,124 @@
+# ============================================================================
+# 2005-08-31 (Wednesday) 21:18 PDT
+# 
+# Setting up ssh keys.
+# 
+# Following three references:
+# 
+# http://www.phy.bnl.gov/computing/gateway/ssh-agent.html
+# http://www.arches.uga.edu/~pkeck/ssh/
+# http://www.slac.stanford.edu/comp/unix/ssh.html
+# 
+# 1) Generate a public and a private ssh key from ki-rh3.
+#    SLAC seems to use rsa1...
+#    Used no passphrase:
+   
+pjm@ki-rh3 > ssh-keygen -t rsa1
+  
+#   Generating public/private rsa key pair.
+#   Enter file in which to save the key (/u/ki/pjm/.ssh/id_rsa):
+#   /u/ki/pjm/.ssh/id_rsa already exists.
+#   Overwrite (y/n)? y
+#   Enter passphrase (empty for no passphrase):
+#   Enter same passphrase again:
+#   Your identification has been saved in /u/ki/pjm/.ssh/id_rsa.
+#   Your public key has been saved in /u/ki/pjm/.ssh/identity.pub.
+#   The key fingerprint is:
+#   88:c7:a4:2f:5e:fb:df:6b:63:e0:1e:8b:5f:0b:27:37 pjm@ki-rh3
+
+# 2) Now add this to the list of authorised keys:
+
+pjm@ki-rh3 > cat ${HOME}/.ssh/identity.pub >> ${HOME}/.ssh/authorized_keys
+
+
+# Now, what about other machines?
+# Outside of SLAC I need to:
+#  1) generate a public ssh key on the remote host and append it to my 
+#     .ssh/authorized_keys?
+# 
+[pjm@howdy ~]$ ssh-keygen -t rsa
+#    Generating public/private rsa key pair.
+#    Enter file in which to save the key (/home/users/pjm/.ssh/id_rsa):
+#    Enter passphrase (empty for no passphrase):
+#    Enter same passphrase again:
+#    Your identification has been saved in /home/users/pjm/.ssh/id_rsa.
+#    Your public key has been saved in /home/users/pjm/.ssh/id_rsa.pub.
+#    The key fingerprint is:
+#    9a:b0:cc:d3:e1:a5:87:98:d6:04:57:d9:30:06:fb:c5 pjm@howdy.physics.nyu.edu
+
+[pjm@howdy ~]$ cat .ssh/id_rsa.pub
+#    ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIEAluH523+nMKVoqVmnU9FHP7R25CLZNKkYUcbnbv3W2fumHS8NIfKwKrgM0qOF/9p7Z2SPAeFAifCRcvOpUeBSE/zM0KpmODYrr05TmPAbBumNEvIdgSus2Q3pNIDRcymuVDhKA+o7pI9DlpRolcEbF5KS8c0U3wOpxe7irTK7+fE= pjm@howdy.physics.nyu.edu
+
+# Adding this line to ki-rh3:.ssh/authorized_keys does NOT allow me to log
+# in to howdy from ki-rh3.
+# BUT it does allow me to login to ki-rh3 from howdy with no password.
+# Therefore - I need to do the reverse, and add my ki-rh3:.ssh/identity.pub to
+# my howdy:.ssh/authorized_keys - as Ted says, its the same set of keys
+# everywhere you go...
+
+[pjm@howdy ~]$ scp ki-rh3.slac.stanford.edu:.ssh/authorized_keys ${HOME}/.ssh/.
+[pjm@howdy ~]$ cat ${HOME}/.ssh/id_rsa.pub >> ${HOME}/.ssh/authorized_keys
+[pjm@howdy ~]$ scp ${HOME}/.ssh/authorized_keys ki-rh3.slac.stanford.edu:.ssh/.
+
+# OK, now I can go both ways.
+
+# 3) Passphrase-set key for astrometry.net:
+
+ ssh-keygen -f astrometry -t rsa1
+
+# Entered passphrase, then send astrometry.pub to dstn.
+
+# ============================================================================
+# At some point I wrote env_make_keychain.ssh to handle ssh keys.
+# ============================================================================
+# 2013-07-18 (Thursday) 09:52 PDT
+
+# Trying to get password-less access to SLAC machines. Following instructions
+# here:  http://www.slac.stanford.edu/comp/unix/sshGSSAPI.html
+
+
+# 1. Create a .k5login file in your SLAC home directory with this one line:
+#    
+#    pjm@SLAC.STANFORD.EDU
+#
+#    This already exists!
+# 
+# 2. Enable GSSAPI authentication and credential forwarding. At SLAC, this is on
+# by default for all taylored machines. If your machine is not taylored, add the
+# following to your .ssh/config file:
+#  
+#    GSSAPIAuthentication yes
+#    # Specifies whether user authentication based on GSSAPI is allowed.
+#    # The default is ``no''. Note that this option applies to protocol
+#    # version 2 only.
+# 
+#    GSSAPIDelegateCredentials yes
+#    ### Forward (delegate) credentials to the server. The default is
+#    # ``no''. Note that this option applies to protocol version 2
+#    # only.
+#    
+# This has to be done on all machines! Keep .ssh/config in cvs.
+#
+# 3. Using these, once you set up your ~/.k5login file in your SLAC home
+# directory, you can then use
+# 
+#    kinit pjm@SLAC.STANFORD.EDU
+#    ssh pjm@machine.slac.stanford.edu
+# 
+# SUCCESS!!
+#
+# Further notes:
+#
+# "In order for you to obtain an AFS token when sshing in w/o a password, you
+# must obtain an forwardable ticket when you kinit. On some OS's this is the
+# default, check the file /etc/krb5.conf for the option
+# 
+#    [libdefaults]
+#    forwardable = true
+#                     
+# If this is not set check the man page for the kinit command for the option to
+# obtain a forwardable ticket. ( Most kerberos implementations use -f )."
+
+# ============================================================================
+
+

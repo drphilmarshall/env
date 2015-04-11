@@ -1,0 +1,9 @@
+GSSAPIAuthentication yes
+# Specifies whether user authentication based on GSSAPI is allowed.
+# The default is ``no''. Note that this option applies to protocol
+# version 2 only.
+
+GSSAPIDelegateCredentials yes
+### Forward (delegate) credentials to the server. The default is
+# ``no''. Note that this option applies to protocol version 2
+# only.

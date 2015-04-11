@@ -1,0 +1,742 @@
+#===============================================================================
+# .login set-up file
+#   - runs after .cshrc - but my .cshrc sources .login first! Which makes more
+#     sense I think:
+#   - sets terminal and global environment characteristics, which are then 
+#     used by .cshrc
+#
+# 2005-06-19 PJM
+# 2006-04-03 Adapted for darwin-linux mix PJM
+#===============================================================================
+setenv VB 0
+
+# Don't run .login if it has already been run:
+
+if ( $?COOKIE ) then
+  if ($VB) echo ".login has already been run"
+  goto FINISH
+endif  
+
+# NO beeps! Causes error in cron jobs though
+# xset b off
+
+if ($VB) echo ".login: setting location..."
+
+# Figure out architecture:
+
+if (${OSTYPE} == 'darwin') then
+  set darwin = 1
+  set linux = 0
+  if ($HOST == nutella.physics.ucsb.edu) then
+    setenv LOCATION MACUCSB
+#    setenv DISPLAY ":0.0"   
+  else if ($HOST == asosx106.physics.ox.ac.uk) then
+    setenv LOCATION Oxford
+  else
+    setenv HOST charlie
+    setenv LOCATION laptop
+    setenv DISPLAY ":0.0"   
+#     setenv HOME /Users/pjm
+  endif
+                                                          
+else if (${OSTYPE} == 'linux') then
+  set darwin = 0
+  set linux = 1
+  set test = `echo $HOST | cut -c1-2` 
+  if (${test} == ki || ${test} == no) then
+    setenv LOCATION SLAC
+    setenv HOME /u/ki/pjm                                                          
+  else if (${HOST} == phil-desktop) then
+    setenv LOCATION KIPAC
+    setenv HOME /home/pjm                                                          
+  else if (${HOST} == aibn119) then
+    setenv LOCATION Bonn
+  else if (${HOST} == ardua.physics.ucsb.edu) then
+    setenv LOCATION UCSB
+    setenv HOME /home/pjm                                                          
+  else if (${HOST} == lsstbook) then
+    setenv LOCATION LSSTBOOK
+    setenv HOME /home/pjm                                                          
+  else if (${HOST} == harlie) then
+    setenv LOCATION GMU
+    setenv HOME /home/pjm                                                          
+  else if (${HOST} == aida77) then
+    setenv LOCATION MPIA
+  else
+    setenv LOCATION UCSB
+    setenv HOME /data1/homedirs/pjm                                                          
+  endif    
+else
+  echo ".login: Unknown operating system ${OSTYPE}"
+  echo ".login: Using darwin setup, assuming laptop"  
+  set darwin = 0
+  set linux = 1  
+  setenv LOCATION laptop
+endif
+
+# Note: phil-desktop at KIPAC is dependent on SLAC afs directories being live
+# Need to test for this and cope with outages...
+
+# Set up remote/backup environment:
+set SLAC = "pjm@ki-rh6.slac.stanford.edu"
+
+#-------------------------------------------------------------------------------
+
+# Directories
+# ***********
+
+if ($VB) echo ".login: naming directories..."
+
+setenv WORK_DIR $HOME/work
+
+setenv DATA_DIR $HOME/data
+
+setenv SOFT_DIR $HOME/software
+
+setenv LATEX_DIR $HOME/work/latex
+
+setenv HAGGLES_DIR $WORK_DIR/stronglensing/HSTarchive
+setenv SHAGGLES_DIR $HAGGLES_DIR/shaggles
+setenv PROGS_INI_shaggles_local $SHAGGLES_DIR/bin/progs_csh_schrabba_kils.ini
+
+# Obv this won't work outside SLAC, but I don't run the HAGGLeS pipeline
+# anywhere else...
+# setenv ENV_SKRIPT_DEVELOP_DIR  ~schrabba/script_develop
+# BUG: no usch user as schrabba! WTF?
+
+setenv B1608_DIR $WORK_DIR/stronglensing/B1608
+
+setenv MS0451_DIR $WORK_DIR/weaklensing/MS0451
+
+setenv RXJ0911_DIR $WORK_DIR/weaklensing/RXJ0911
+
+setenv TIMEDELAYS_DIR ${WORK_DIR}/stronglensing/timedelays
+setenv TIMEDELAYS_DATA_DIR ${WORK_DIR}/stronglensing/timedelays/LSST
+
+setenv SEX_DIR ${WORK_DIR}/stronglensing/sex
+
+setenv SOAP_DIR ${WORK_DIR}/stronglensing/soap
+
+setenv SCRIPTUTILS_DIR ${HOME}/scriptutils
+
+setenv KLENS_DIR ${WORK_DIR}/stronglensing/KLens
+
+setenv STGMS_DIR ${HOME}/STGMS
+
+setenv GLAMROC_DIR ${WORK_DIR}/stronglensing/glamroc
+
+setenv MEDIC_DIR ${WORK_DIR}/medic
+
+setenv ASTROMETRY_DIR ${WORK_DIR}/astrometry
+
+setenv PS1QLS_DIR $WORK_DIR/stronglensing/PanSTARRS/PS1QLS
+
+setenv EMCEE_DIR ${WORK_DIR}/bayesian/emcee
+
+# Shared software directories:
+
+if (${LOCATION} == SLAC) then
+  setenv BACKUP_DIR /nfs/slac/g/ki/ki19/${USER}
+  setenv NFS_DIR /nfs/slac/g/ki/ki19/pjm
+  setenv VSA_ARCHIVE_DIR ${NFS_DIR}/VSA/imagearchive
+#   setenv GROUP_SOFT_DIR /afs/slac/g/ki/ki04/soft
+  setenv GROUP_SOFT_DIR /afs/slac/g/ki/software
+  setenv HAGGLES_DATA_DIR /nfs/slac/g/ki/haggles
+  setenv MS0451_DATA_DIR $HAGGLES_DATA_DIR/hlsp/MS0451
+  setenv USNOB_DIR /nfs/slac/g/ki/ki06/pjm/astrometry/usno/vb
+  setenv MUSIC_DIR /nfs/slac/g/ki/ki04/marusa/muzika
+#  setenv PROD_DIR_PREFIX ${GROUP_SOFT_DIR}/idl/products
+#  setenv PRODUCTS $PROD_DIR_PREFIX/ups_db
+#  setenv EUPS_DIR $PROD_DIR_PREFIX/evilups
+
+else if (${LOCATION} == KIPAC) then
+# # 2010-01-20: Removing all afs dirs from path during SLAC power outage...
+#   setenv GROUP_SOFT_DIR ${HOME}/software
+#   setenv GROUP_SOFT_DIR /afs/slac/g/ki/ki04/soft
+  setenv GROUP_SOFT_DIR /afs/slac/g/ki/software
+
+else if (${LOCATION} == UCSB) then
+#   setenv HAGGLES_DATA_DIR ${WORK_DIR}/stronglensing/HSTarchive/haggles
+#   setenv HAGGLES_DATA_DIR /data1/HAGGLeS
+  setenv HAGGLES_DATA_DIR /data4/pjm/HAGGLeS
+  setenv MUSIC_DIR /home/pjm/music
+
+else if (${LOCATION} == MACUCSB) then
+  setenv GROUP_SOFT_DIR /scisoft/i386
+
+else if (${LOCATION} == Bonn) then
+  setenv HAGGLES_DATA_DIR /nfs/slac/g/ki/haggles
+
+else if (${LOCATION} == MPIA) then
+  setenv PS1QLS_DATA_DIR /a77d1/PS1_QLS
+
+else if (${LOCATION} == laptop) then
+  setenv PROD_DIR_PREFIX ${HOME}/products
+  setenv PRODUCTS $PROD_DIR_PREFIX/ups_db
+  setenv EUPS_DIR $PROD_DIR_PREFIX/evilups
+
+else if (${LOCATION} == Oxford) then
+  setenv PROD_DIR_PREFIX ${HOME}/products
+  setenv PRODUCTS $PROD_DIR_PREFIX/ups_db
+  setenv EUPS_DIR $PROD_DIR_PREFIX/evilups
+  
+endif
+
+#-------------------------------------------------------------------------------
+
+# Packages
+# ********
+
+# # Packages are easy at Oxford - all done via the Activate system:
+# 
+# if (${LOCATION} == Oxford) then
+# 
+#   source /Local/bin/Setup.csh
+# 
+# # These should be done by hand, not here:
+#   Activate scisoft
+#   Activate idl 71
+# 
+# endif
+
+# Elsewhere they just exist already - just have to set environment variables:
+
+# PGPLOT:
+
+if (${LOCATION} == SLAC) then
+#   setenv PGPLOT_DIR /afs/slac/g/ki/ki01/pgplot
+  setenv PGPLOT_DIR $GROUP_SOFT_DIR/pgplot/5.2/lib
+else if (${LOCATION} == KIPAC) then
+# 2010-01-20: Removing all afs dirs from path during SLAC power outage...
+#   setenv PGPLOT_DIR /afs/slac/g/ki/ki01/pgplot
+  setenv PGPLOT_DIR $GROUP_SOFT_DIR/pgplot/5.2/lib
+#   setenv PGPLOT_DIR /usr/local/pgplot
+else if (${LOCATION} == UCSB) then
+  setenv PGPLOT_DIR /usr/lib
+else if (${LOCATION} == MACUCSB) then
+  setenv PGPLOT_DIR /scisoft/i386/lib
+else if (${LOCATION} == laptop) then
+  setenv PGPLOT_DIR /usr/local/lib/pgplot
+else if (${LOCATION} == Oxford) then
+  setenv PGPLOT_DIR /Applications/scisoft/i386/lib
+endif
+
+# Not sure this exists on Oxford system:
+setenv PGPLOT_FONT ${PGPLOT_DIR}/grfont.dat
+
+
+# CFITSIO:
+
+# setenv CFITSIO_DIR /u/ki/pjm/lib
+if (${LOCATION} == SLAC) then
+#   setenv CFITSIO_DIR /afs/slac/g/ki/ki01/lib
+  setenv CFITSIO_DIR $GROUP_SOFT_DIR/cfitsio/3.24/lib
+else if (${LOCATION} == KIPAC) then
+# 2010-01-20: Removing all afs dirs from path during SLAC power outage...
+#   setenv CFITSIO_DIR /afs/slac/g/ki/ki01/lib
+#   setenv CFITSIO_DIR /usr/local/lib
+  setenv CFITSIO_DIR $GROUP_SOFT_DIR/cfitsio/3.24/lib
+else if (${LOCATION} == UCSB) then
+  setenv CFITSIO_DIR /usr/lib
+else if (${LOCATION} == MACUCSB) then
+  setenv CFITSIO_DIR /scisoft/i386/lib
+else if (${LOCATION} == laptop) then
+  setenv CFITSIO_DIR /sw/lib
+else if (${LOCATION} == Oxford) then
+  setenv CFITSIO_DIR /Applications/scisoft/i386/lib
+else if (${LOCATION} == MPIA) then
+  setenv CFITSIO_DIR /usr/lib64
+endif
+
+
+# lensing analysis code:
+setenv MCADAM_DIR   ${WORK_DIR}/McAdam
+setenv IM2SHAPE_DIR ${WORK_DIR}/weaklensing/im2shape
+setenv LENSENT2_DIR ${WORK_DIR}/weaklensing/lensent2
+setenv LENSTOOL_DIR ${WORK_DIR}/stronglensing/lenstool
+setenv PSFENT_DIR ${WORK_DIR}/weaklensing/psfent
+setenv PROTO_DIR ${WORK_DIR}/stronglensing/PanSTARRS/proto
+
+# image/catalog analysis:
+setenv TRACTOR_DIR ${HOME}/work/tractor
+
+# robotic lens finding:
+setenv LENSTRACTOR_DIR ${HOME}/work/stronglensing/LensTractor
+
+# general prob theory analysis:
+setenv PAPPY_DIR ${HOME}/python/pappy
+
+# Color composite creation:
+setenv HUMVI_DIR ${HOME}/python/HUMVI
+
+# Toons!
+setenv TOON_DIR ${HOME}/python/Toons
+
+# OM10 mock lenses
+setenv OM10_DIR ${WORK_DIR}/stronglensing/OM10
+
+# SED fitting:
+setenv STELLARPOP_DIR ${WORK_DIR}/photometry/stellarpop
+
+# Lightcone reconstruction:
+setenv PANGLOSS_DIR ${WORK_DIR}/stronglensing/H0/lightcones/Pangloss
+
+# Local Group:
+setenv LOCALGROUP_DIR ${WORK_DIR}/localgroup/LocalGroupHaloProps
+
+# Space Warps:
+setenv SW_WEB_DIR $HOME/public_html/SpaceWarps/Dev
+setenv SWAP_DIR ${HOME}/public_html/SpaceWarps/Science/analysis
+
+# imcat:
+if ($darwin) then
+  setenv IMCAT_DIR /usr/local/imcat
+else  
+  setenv IMCAT_DIR ${WORK_DIR}/weaklensing/imcat
+endif
+setenv IMCATDIR ${IMCAT_DIR}
+
+# hyperz:
+if (${LOCATION} == SLAC) then
+  setenv HYPERZ_DIR ${GROUP_SOFT_DIR}/src/ZPHOT
+else
+  setenv HYPERZ_DIR ${WORK_DIR}/photometry/hyperz/ZPHOT
+endif
+
+# IDL utils - hacked for nutella/Oxford:
+if (${LOCATION} == SLAC || ${LOCATION} == KIPAC) then
+#   setenv IDLUTILS_DIR ${GROUP_SOFT_DIR}/idl/idlutils
+  setenv IDLUTILS_DIR /afs/slac/g/ki/ki04/i386_linux24/soft/idl/idlutils
+  setenv PHOTOOPS_DIR ${GROUP_SOFT_DIR}/idl/photoops
+else if (${LOCATION} == MACUCSB) then
+  setenv IDLUTILS_DIR /Users/pjm/idlutils
+  setenv PHOTOOPS_DIR /Users/pjm/photoops
+else if (${LOCATION} == UCSB) then
+  setenv IDLUTILS_DIR /usr/local/idl/idlutils
+  setenv PHOTOOPS_DIR /usr/local/idl/photoops
+else if (${LOCATION} == laptop) then
+  setenv IDLUTILS_DIR ${HOME}/products/Darwin/idlutils/v5_0_4
+else if (${LOCATION} == Oxford) then
+  setenv IDLUTILS_DIR /Users/pjm/idlutils
+  setenv PHOTOOPS_DIR /Users/pjm/photoops
+endif
+
+setenv IDL_RBUF_SIZE 5000
+
+# MrLens
+setenv MRL_DIR ${WORK_DIR}/weaklensing/MrLens/MRL
+setenv MRL $MRL_DIR
+
+# kcorrect
+if (${LOCATION} == SLAC) then
+  setenv KCORRECT_DIR ${GROUP_SOFT_DIR}/idl/kcorrect
+else if (${LOCATION} == KIPAC) then
+  setenv KCORRECT_DIR ${GROUP_SOFT_DIR}/idl/kcorrect
+else if (${LOCATION} == UCSB) then
+  setenv KCORRECT_DIR /usr/local/kcorrect
+else if (${LOCATION} == laptop) then
+  setenv KCORRECT_DIR /usr/local/kcorrect
+else 
+  setenv KCORRECT_DIR $WORK_DIR/idl/kcorrect
+endif
+
+
+# KIPAC stuff:
+if (${LOCATION} == SLAC || ${LOCATION} == KIPAC) then
+  setenv PERL5LIB $GROUP_SOFT_DIR/perl/lib/site_perl/5.8.4/i386_linux24
+  setenv PERL5LIB ${PERL5LIB}:${HOME}/software/PGPLOT-2.19
+# 2010-01-20: Removed all afs dirs from path during SLAC power outage...
+#   setenv stsdas ${HOME}/stsdas # dummy...
+#   setenv IRAF_DIR ${HOME}/software
+
+# Trying to make CALACS work, with Glenn:
+#   setenv IRAF_DIR /afs/slac/g/ki/software/iraf/iraf/
+  setenv IRAF_DIR $GROUP_SOFT_DIR/iraf/2.14.1/iraf/
+  setenv iraf ${IRAF_DIR}
+  setenv stsdas ${IRAF_DIR}/extern/stsdas
+# This needs doing but maybe not here!
+#   source ${iraf}unix/hlib/irafuser.csh
+  setenv IRAFARCH linux64
+endif
+
+
+# SLAC-specific stuff:
+if (${LOCATION} == SLAC) then
+
+  setenv USAARCH Linux
+  setenv USAroot /nfs/slac/g/USAData1/USA
+  setenv WCS_DIR /afs/slac/g/ki/ki01/lib
+  setenv USNOB10_PATH /nfs/slac/g/ki/ki06/pjm/astrometry/usno/vb
+  setenv CADENCE_DIR /u1/cadence/lsst-Prod-1-31/simulator/src
+
+  setenv LSST_HOME /afs/slac/g/lsst/software/redhat6-x86_64-64bit-gcc44/DMstack/Winter2013-v6_2/
+
+endif
+
+
+#-------------------------------------------------------------------------------
+
+# Paths
+# *****
+
+# Initial path - this should be set by global .login or something, and is in 
+# some places (like MPIA):
+
+if ($VB) echo ".login: setting PATH..."
+
+if ($linux) then
+
+  if (${LOCATION} == SLAC || ${LOCATION} == KIPAC) then
+    setenv PATH /usr/local/bin:/usr/bin:/bin:/usr/X11R6/bin:/usr/kerberos/bin
+
+  else if (${LOCATION} == MPIA) then
+    if ($VB) echo ".login: using default path from global setup, plus a few extras..."
+
+  else
+    setenv PATH /usr/local/bin:/usr/bin:/bin:/usr/X11R6/bin
+
+  endif
+
+else if ($darwin) then
+
+  if (${LOCATION} == laptop) then
+
+    # Python 2.7.2:
+    # Python executable lives in /usr/local/bin...  
+    setenv PATH  /usr/local/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/texbin
+    # Packages managed by homebrew and pip:
+    setenv PATH /usr/local/share/python:$PATH
+
+    # # Python 2.6.1:
+    # # Python executable lives in /usr/local/bin...  
+    #     setenv PATH  /bin:/sbin:/usr/bin:/usr/local/bin:/usr/sbin:/usr/X11R6/bin:/usr/texbin
+
+  else if (${LOCATION} == Oxford) then
+
+    # Oxford setup script, following path reset just to be sure:  
+    unsetenv PATH
+    setenv PATH /usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/Local/bin:/Local/sbin:/opt/local/bin:/opt/local/sbin:/usr/texbin:/usr/X11/bin
+    source /Local/bin/Setup.csh
+  
+  endif
+endif
+
+
+# Now all the rest of the paths - some are site/architecture dependent:
+if ($linux) then
+ if (${LOCATION} == SLAC || ${LOCATION} == KIPAC) then
+  setenv PATH ${PATH}:/usr/afsws/bin:/afs/slac/g/ki/bin
+  setenv PATH ${PATH}:${GROUP_SOFT_DIR}/bin
+  setenv PATH ${PATH}:${GROUP_SOFT_DIR}/local/bin
+  setenv PATH ${PATH}/afs/slac/g/ki/root/bin:/afs/slac/g/ki/ki01/share
+  setenv PATH ${PATH}:${HOME}/players
+ endif
+else if ($darwin && ${LOCATION} != Oxford) then
+ setenv PATH /sw/bin:${PATH}
+ setenv PATH /Applications:${PATH}
+ if (${LOCATION} == MACUCSB) then
+  setenv PATH ${PATH}:${GROUP_SOFT_DIR}/bin
+ endif
+endif
+
+setenv PATH ${PATH}:${MCADAM_DIR}/bin/${OSTYPE}:${MCADAM_DIR}
+setenv PATH ${PATH}:${IM2SHAPE_DIR}/bin:${IM2SHAPE_DIR}/bin/${OSTYPE}
+setenv PATH ${PATH}:${LENSENT2_DIR}/bin
+setenv PATH ${PATH}:${PSFENT_DIR}/bin
+setenv PATH ${PATH}:${IMCAT_DIR}/bin/${OSTYPE}
+setenv PATH ${PATH}:${IMCAT_DIR}/bin/scripts
+setenv PATH ${PATH}:${PROTO_DIR}/python
+setenv PATH ${PATH}:${PROTO_DIR}/bin
+setenv PATH ${PATH}:${PAPPY_DIR}
+setenv PATH ${PATH}:${LENSTRACTOR_DIR}
+setenv PATH ${PATH}:${PANGLOSS_DIR}
+setenv PATH ${PATH}:${SWAP_DIR}
+setenv PATH ${PATH}:${LOCALGROUP_DIR}
+setenv PATH ${PATH}:${HUMVI_DIR}
+setenv PATH ${PATH}:${EMCEE_DIR}
+
+if ($linux) then
+  if (${LOCATION} == SLAC) then
+    setenv PATH ${PATH}:/usr/local/rsi/idl/bin
+    setenv PATH ${PATH}:${IDLUTILS_DIR}/bin
+  else
+    setenv PATH ${PATH}:/usr/local/itt/idl70/bin
+    setenv PATH ${PATH}:${IDLUTILS_DIR}/bin
+  endif  
+else if ($darwin && ${LOCATION} != Oxford) then
+  setenv PATH ${PATH}:/Applications/itt/idl/bin
+endif
+
+if (${LOCATION} == SLAC) setenv PATH ${PATH}:/u2/pjm/software/STGMS/jre/bin
+
+setenv PATH ${PATH}:${SCRIPTUTILS_DIR}/perl
+setenv PATH ${PATH}:${SCRIPTUTILS_DIR}/csh
+setenv PATH ${PATH}:${SCRIPTUTILS_DIR}/bin
+setenv PATH ${PATH}:${SCRIPTUTILS_DIR}/bash
+setenv PATH ${PATH}:${SHAGGLES_DIR}/bin
+setenv PATH ${PATH}:${KLENS_DIR}/jred/csh
+setenv PATH ${PATH}:${GLAMROC_DIR}/bin 
+setenv PATH ${PATH}:${MEDIC_DIR}/bin
+setenv PATH ${PATH}:${STELLARPOP_DIR}
+
+# Python at SLAC:
+if (${LOCATION} == SLAC || ${LOCATION} == KIPAC) then
+  setenv PATH ${GROUP_SOFT_DIR}/python/2.5.5/bin:${PATH}
+endif
+
+if (${LOCATION} == SLAC || ${LOCATION} == KIPAC) then
+  setenv PATH ${PATH}:${GROUP_SOFT_DIR}/stsci_python/pyraf 
+  setenv PATH ${PATH}:${HOME}/iraf
+  setenv PATH ${PATH}:${IRAF_DIR}
+  setenv PATH ${PATH}:${GROUP_SOFT_DIR}/stsci_python/multidrizzle
+endif
+
+setenv PATH $KCORRECT_DIR/bin:$PATH
+  
+# Homegrown commands get preference:
+setenv PATH ${HOME}/bin:${HOME}/csh:${HOME}/perl:${HOME}/python:${PATH}
+setenv PATH ${PATH}:${HOME}/cvs/env
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ----
+
+# Library path - not set globally by default:
+
+if ($VB) echo ".login: setting LD_LIBRARY_PATH..."
+
+if ($linux) then
+  if ( ! $?LD_LIBRARY_PATH ) setenv LD_LIBRARY_PATH /lib:/usr/lib:/usr/local/lib:/usr/X11R6/lib
+  # Homegrown libraries get preference:
+  setenv LD_LIBRARY_PATH ${HOME}/lib:${LD_LIBRARY_PATH}
+  # Now all the rest:
+  setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${PGPLOT_DIR}
+  setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${CFITSIO_DIR}
+  setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${MCADAM_DIR}/lib/linux
+  if (${LOCATION} == SLAC) then
+    setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/afs/slac/g/ki/ki01/lib
+    setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${GROUP_SOFT_DIR}/lib
+    setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/lib/ssa/
+    setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:$USAroot/pgplot/${USAARCH}:$USAroot/lib/${USAARCH}
+    setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/afs/slac/g/ki/ki01/mysql/lib/mysql
+  else if (${LOCATION} == KIPAC) then
+    setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/usr/lib64
+# 2010-01-20: Removing all afs dirs from path during SLAC power outage...
+    setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/afs/slac/g/ki/ki01/lib
+    setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${GROUP_SOFT_DIR}/lib
+# 2010-01-20: Removing all afs dirs from path during SLAC power outage...
+    setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/afs/slac/g/ki/ki01/mysql/lib/mysql
+  else if (${LOCATION} == UCSB) then
+    setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/usr/X11R6/lib64
+  endif
+else if ($darwin && ${LOCATION} != Oxford) then
+  # setenv LD_LIBRARY_PATH /sw/lib:/sw/lib/pgplot:${HOME}/lib:
+  setenv LD_LIBRARY_PATH /usr/lib:/usr/local/lib:/usr/X11R6/lib
+  setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${HOME}/software/cfitsio
+else if ($darwin && ${LOCATION} == Oxford) then
+  setenv LD_LIBRARY_PATH ${HOME}/lib:/usr/lib:/usr/local/lib:/usr/X11R6/lib
+endif
+setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:$KCORRECT_DIR/lib
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ----
+
+# LaTeX path - always reset:
+# if ( ! $?TEXINPUTS ) setenv TEXINPUTS ""
+setenv TEXINPUTS ":."
+if ($linux) then
+  setenv TEXINPUTS "${TEXINPUTS}:/usr/share/texmf:/usr/share/texmf/tex/generic/pstricks:/usr/share/texmf/tex/latex:/usr/share/texmf/tex/latex"
+else if ($darwin && ${LOCATION} == laptop) then
+  setenv TEXINPUTS "${TEXINPUTS}:/sw/share/texmf:/sw/share/texmf/tex/generic/pstricks:/sw/share/texmf/tex/latex"
+else if ($darwin && ${LOCATION} == Oxford) then
+  setenv TEXINPUTS "${TEXINPUTS}:/Library/TeX"
+endif
+setenv TEXINPUTS "${TEXINPUTS}:$LATEX_DIR/styles:$LATEX_DIR/styles/mnras:$LATEX_DIR/styles/aastex52:$LATEX_DIR/styles/lineno:$LATEX_DIR/styles/revnum:$LATEX_DIR/styles/revtex4"
+# On Mac OS X Snow Leopard at Oxford this is all ignored! LaTeX just looks 
+# where it always looks. Find this out by doing:
+#  >> kpsewhich --progname=pdflatex --show-path=.sty
+#  .:/Users/marshallp/.texlive2009/texmf-config/tex/latex//:/Users/marshallp/.texlive2009/texmf-var/tex/latex//:/Users/marshallp/Library/texmf/tex/latex//:
+# In Oxford I did:
+#  >> mkdirf ~/Library/texmf/tex/latex
+#  >> ln -s $LATEX_DIR/styles .
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ----
+
+# Python path:
+
+if ($VB) echo ".login: setting PYTHONPATH..."
+
+if (${LOCATION} == SLAC || ${LOCATION} == KIPAC) then
+
+# # Glenn's installation at SLAC:
+#   setenv PYTHONPATH $GROUP_SOFT_DIR/stsci_python
+#   setenv PYTHONPATH /afs/slac/g/ki/ki04/i386_linux24/soft/stsci_python:/afs/slac/g/ki/lib/python2.4/site-packages
+#   setenv PYTHONPATH /afs/slac/g/ki/software/python/2.5.4/bin/python
+#   setenv PYTHONPATH $GROUP_SOFT_DIR/python/2.5.1
+
+# # Doug's installation at SLAC:
+  setenv DAPPLE /u/ki/dapple
+#   setenv rhelv `cat /etc/issue | awk '{print $7}'`
+#   if (${rhelv} == 4) then
+#     setenv PYTHONPATH $DAPPLE/lib/rhel4/
+#   else
+#     setenv PYTHONPATH $HOME/lib/rhel5/
+#   endif 
+  setenv PYTHONPATH ${PYTHONPATH}:$DAPPLE/lib/python2.5/site-packages
+  setenv PYTHONPATH ${PYTHONPATH}:$DAPPLE/lib/python
+#   setenv PYTHONPATH ${PYTHONPATH}:$GROUP_SOFT_DIR/python/lib/2.5/site-packages
+#   setenv PYTHONPATH ${PYTHONPATH}:/afs/slac/g/ki/root/lib/
+
+# # LSST DM Stack:
+#   source $LSST_HOME/loadLSST.csh
+
+else if (${LOCATION} == MPIA) then
+  setenv ERIC /a77h/morganson
+  setenv PYTHONPATH $ERIC/python/pyfits/lib64/python2.6/site-packages
+
+else if (${LOCATION} == laptop) then
+  setenv PYTHONPATH /usr/local/bin/python
+  
+else
+# BUG: pythonpath not setup for Oxford yet
+  setenv PYTHONPATH /usr/bin/python
+  
+endif
+
+setenv PYTHONPATH ${PYTHONPATH}:${HOME}/software/APLpy-0.9.6
+if (${LOCATION} == laptop) then
+#   setenv PYTHONPATH ${PYTHONPATH}:${HOME}/software/ATpy-0.9.5.1
+  setenv PYTHONPATH ${PYTHONPATH}:${HOME}/software/ATpy-0.9.5.3
+else
+  setenv PYTHONPATH ${PYTHONPATH}:${HOME}/software/ATpy-0.9.5.3
+endif
+
+setenv PYTHONPATH ${TRACTOR_DIR}:${PYTHONPATH}
+setenv PYTHONPATH ${ASTROMETRY_DIR}:${PYTHONPATH}
+setenv PYTHONPATH ${STELLARPOP_DIR}/..:${PYTHONPATH}
+setenv PYTHONPATH ${HOME}/python:${PYTHONPATH}
+setenv PYTHONPATH ${HOME}/lib/python2.6/site-packages:${PYTHONPATH}
+setenv PYTHONPATH ${PROTO_DIR}/python:${PYTHONPATH}
+setenv PYTHONPATH ${PAPPY_DIR}:${PYTHONPATH}
+setenv PYTHONPATH ${LENSTRACTOR_DIR}:${PYTHONPATH}
+setenv PYTHONPATH ${PANGLOSS_DIR}:${PYTHONPATH}
+setenv PYTHONPATH ${SWAP_DIR}:${PYTHONPATH}
+setenv PYTHONPATH ${LOCALGROUP_DIR}:${PYTHONPATH}
+setenv PYTHONPATH ${HUMVI_DIR}:${PYTHONPATH}
+setenv PYTHONPATH ${TOON_DIR}:${PYTHONPATH}
+setenv PYTHONPATH ${EMCEE_DIR}:${PYTHONPATH}
+setenv PYTHONPATH ${OM10_DIR}:${PYTHONPATH}
+setenv PYTHONPATH .:${PYTHONPATH}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ----
+
+# IDL path:
+
+if ($VB) echo ".login: setting IDL_PATH..."
+
+if (${LOCATION} == SLAC || ${LOCATION} == KIPAC) then
+# 2007-11-12 (Monday) 14:40 PST - Stuart upgraded idl...
+#   setenv IDL_DIR /afs/slac/g/ek/rsi/idl
+# 2010-01-20: Removing all afs dirs from path during SLAC power outage...
+  setenv IDL_DIR /afs/slac/g/ki/software/idl/idl_6.1
+#   setenv IDL_DIR ${HOME}/software # dummy...
+else if (${LOCATION} == UCSB) then
+#   setenv IDL_DIR /usr/local/rsi/idl_6.3
+  setenv IDL_DIR /usr/local/itt/idl70
+else if (${LOCATION} == laptop) then
+  setenv IDL_DIR /Applications/itt/idl
+else if (${LOCATION} == Oxford) then
+  setenv IDL_DIR /Applications/itt/idl
+endif
+
+if (${LOCATION} == SLAC || ${LOCATION} == KIPAC) then
+# Run setup script - which resets IDL_DIR!
+# 2010-01-20: turn this off during power outage:
+  if ( -e ${IDL_DIR} ) source ${IDL_DIR}/bin/idl_setup
+endif
+
+setenv IDL_PATH ${IDL_DIR}/lib
+
+setenv IDL_PATH ${IDL_PATH}:${HOME}/work/pro
+setenv IDL_PATH ${IDL_PATH}:${HOME}/work/pro/lamlib
+setenv IDL_PATH ${IDL_PATH}:+${IDLUTILS_DIR}/pro
+setenv IDL_PATH ${IDL_PATH}:+${IDLUTILS_DIR}/goddard/pro
+setenv IDL_PATH ${IDL_PATH}:${SHAGGLES_DIR}/pro
+setenv IDL_PATH ${IDL_PATH}:${KLENS_DIR}/pro
+setenv IDL_PATH ${IDL_PATH}:${KLENS_DIR}/jred/idl
+setenv IDL_PATH ${IDL_PATH}:+$KCORRECT_DIR/pro
+
+if (${LOCATION} == SLAC) then
+# # BROKEN IDL path:
+# 
+# source /afs/slac/g/ek/rsi/idl/bin/idl_setup
+# setenv IDL_PATH .:${IDL_DIR}/lib:${HOME}/work/pro:${HOME}/work/pro/lamlib
+# setenv IDL_PATH ${IDL_PATH}:+${IDLUTILS_DIR}/goddard/pro:+${IDLUTILS_DIR}/pro:.
+# setenv IDL_PATH ${IDL_PATH}:+${PHOTOOPS_DIR}/pro
+# setenv IDL_PATH ${IDL_PATH}:+/afs/slac/g/ki/ki04/soft/idl/craigm
+# setenv IDL_PATH ${IDL_PATH}:+/afs/slac/g/ki/ki04/soft/idl/knight
+# setenv IDL_PATH ${IDL_PATH}:+/afs/slac/g/ki/ki04/soft/idl/xidl
+#
+  setenv IDL_PATH ${IDL_PATH}:+${PHOTOOPS_DIR}/pro
+  setenv IDL_PATH ${IDL_PATH}:${GROUP_SOFT_DIR}/idl/craigm
+  setenv IDL_PATH ${IDL_PATH}:${GROUP_SOFT_DIR}/idl/knight
+  setenv IDL_PATH ${IDL_PATH}:${GROUP_SOFT_DIR}/idl/xidl
+endif
+setenv IDL_PATH ${IDL_PATH}:.
+
+#-------------------------------------------------------------------------------
+
+# Other environment variables
+# ***************************
+
+if ($VB) echo ".login: setting remaining environment variables..."
+
+setenv EDITOR nano
+
+setenv CVS_RSH ssh
+setenv RSYNC_RSH ssh
+
+if (${LOCATION} == Oxford || ${LOCATION} == MPIA) then
+  setenv GS_OPTIONS -sPAPERSIZE=a4
+else
+  setenv GS_OPTIONS -sPAPERSIZE=letter
+endif
+
+# Needed to make nedit work in Oxford:
+if (${LOCATION} == Oxford) then
+  unsetenv LANG
+endif
+
+
+# Compilers - NEEDS WORK FOR OXFORD!:
+
+if (${LOCATION} == laptop) then
+# Python installation (numpy, scipy etc) requires these - and even then,
+# gfortran has to be selected explicitly:
+  setenv F77 gfortran
+  setenv CC clang
+#  setenv CC /usr/bin/gcc
+  setenv CXX /usr/bin/g++
+# Then, a bunch of python installations needed the following set:
+  setenv MACOSX_DEPLOYMENT_TARGET 10.6
+  setenv ARCH "-arch x86_64"
+  setenv CFLAGS "${ARCH}"
+  setenv FFLAGS "-static -ff2c ${ARCH}"
+  setenv LDFLAGS "-Wall -undefined dynamic_lookup ${ARCH}"
+else
+  setenv CC /usr/bin/gcc
+  setenv CXX /usr/bin/g++
+  if ($linux) then
+    setenv FC /usr/bin/g77
+  else if ($darwin) then
+    setenv FC /sw/bin/g77
+  endif
+endif
+
+# Finally set a cookie to show that the .login has been run (allows .cshrc to
+# always run .login: all shells become login shells.
+
+setenv COOKIE 1
+
+#===============================================================================
+FINISH:

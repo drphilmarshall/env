@@ -1,0 +1,296 @@
+#===============================================================================
+# tcsh set-up file
+#   - command aliases and shell variables
+#   - environment variables are set in .login
+#
+# 2005-06-19 PJM
+#===============================================================================
+
+# Run .login if it has not already been run:
+
+# if ( ! $?COOKIE ) then
+#   echo "Sourcing .login from .cshrc -\c"
+unsetenv COOKIE  
+source $HOME/.login
+#   echo " done"
+# endif
+
+# Environment variable LOCATION should now be set to one of
+# (KIPAC/UCSB/SLAC/laptop/Oxford/MPIA).
+
+# Figure out architecture:
+
+if (${OSTYPE} == 'darwin') then
+  set darwin = 1
+  set linux = 0
+else if (${OSTYPE} == 'linux') then
+  set darwin = 0
+  set linux = 1  
+else
+  echo "Unknown operating system ${OSTYPE}"
+  echo "Using linux setup..."  
+  set darwin = 0
+  set linux = 1  
+endif
+
+# Global setup for laptop:
+
+if ($darwin && ${LOCATION} != Oxford) then
+  set globalinitfile = /sw/bin/init.csh
+  if ( -e $globalinitfile ) source $globalinitfile 
+endif
+
+# Shell variables
+# ***************
+if ($VB) echo ".cshrc: setting shell variables..."
+
+# Set prompt - set title bar to show the $cwd as well:
+if ( $?TERM ) then
+ if ( $TERM == 'ansi' || $TERM == 'linux' ) then
+#   set prompt='%m \! > '
+  set prompt = "%{\e]2\;%m:%/^g\e]1\;%m^g\r%}%n@%m > "
+ else if ( $TERM == 'xterm-color' || $TERM == 'xterm' ) then
+  set prompt = "%{\033]0;%m:%/\007%}%n@%m > "
+ endif
+else
+  set prompt='%n@%m > '
+endif
+
+# Useful history length:
+set history=5000
+
+# Overwrite files from scripts:
+unset noclobber
+
+# Show options when pummeling the tab key:
+set autolist
+
+# Enhanced command completion to alleviate autolisting problems:
+source ${HOME}/.complete
+
+# Don't limit coredumpsize etc:
+# unless we are on the craptop!
+if ($LOCATION == 'laptop') then
+  limit coredumpsize 0
+else
+  unlimit coredumpsize
+endif  
+
+# Prompt with corrected version of command - can cause problems when
+# scripting:
+# set correct = cmd
+
+#-------------------------------------------------------------------------------
+
+# Custom commands
+# ***************
+if ($VB) echo ".cshrc: setting aliases..."
+
+# pwd each cd:
+alias cd 'chdir \!* ; echo $cwd'
+
+# 2 and 3-fingered python:
+alias py python
+alias ipy ipython
+
+# Colored ls:
+if ($linux) then
+  setenv LS_COLORS  "no=00:fi=00:di=01;34:ln=00;36:pi=40;33:so=00;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=00;31:*.cmd=00;31:*.exe=00;31:*.com=00;31:*.tar=01;40;37:*.zip=01;40;37:*.ZIP=01;40;37:*.z=01;40;37:*.Z=01;40;37:*.gz=01;40;37:*.uu=01;40;37:*.bz2=01;40;37:*.bz=01;40;37:*.tz=01;40;37:*.jpg=00;35:*.jpeg=00;35:*.gif=00;35:*.bmp=00;35:*.xbm=00;35:*.xpm=00;35:*.ppm=00;35:*.png=00;35:*.tif=00;35:*.tiff=00;35:*.mpg=00;35:*.mpeg=00;35:*.wav=00;35:*.ps=00;35:*.eps=00;35:*.pdf=00;35:*.bib=00;32:*.tex=00;32:*.sty=00;32:*.cls=00;32:*.bst=00;32:"
+  alias ls /bin/ls --color=auto
+else if ($darwin && $LOCATION == laptop) then
+  setenv LS_COLORS  "no=00:fi=00:di=01;34:ln=00;36:pi=40;33:so=00;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:*.cmd=00;31:*.exe=00;31:*.com=00;31:*.tar=01;40;37:*.zip=01;40;37:*.z=01;40;37:*.Z=01;40;37:*.gz=01;40;37:*.uu=01;40;37:*.bz2=01;40;37:*.bz=01;40;37:*.tz=01;40;37:*.jpg=00;35:*.jpeg=00;35:*.gif=00;35:*.bmp=00;35:*.xbm=00;35:*.xpm=00;35:*.ppm=00;35:*.png=00;35:*.tif=00;35:*.tiff=00;35:*.mpg=00;35:*.mpeg=00;35:*.wav=00;35:*.ps=00;35:*.eps=00;35:*.pdf=00;35:*.bib=00;32:*.tex=00;32:*.sty=00;32:*.cls=00;32:*.bst=00;32:ex=00;31:"
+  alias ls /bin/ls -G
+else if ($darwin && $LOCATION == MACUCSB) then
+  setenv LS_COLORS  "no=00:fi=00:di=01;34:ln=00;36:pi=40;33:so=00;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:*.cmd=00;31:*.exe=00;31:*.com=00;31:*.tar=01;40;37:*.zip=01;40;37:*.z=01;40;37:*.Z=01;40;37:*.gz=01;40;37:*.uu=01;40;37:*.bz2=01;40;37:*.bz=01;40;37:*.tz=01;40;37:*.jpg=00;35:*.jpeg=00;35:*.gif=00;35:*.bmp=00;35:*.xbm=00;35:*.xpm=00;35:*.ppm=00;35:*.png=00;35:*.tif=00;35:*.tiff=00;35:*.mpg=00;35:*.mpeg=00;35:*.wav=00;35:*.ps=00;35:*.eps=00;35:*.pdf=00;35:*.bib=00;32:*.tex=00;32:*.sty=00;32:*.cls=00;32:*.bst=00;32:ex=00;31:"
+  alias ls /bin/ls -G
+else if ($darwin && $LOCATION == Oxford) then
+  setenv LS_COLORS  "no=00:fi=00:di=01;34:ln=00;36:pi=40;33:so=00;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:*.cmd=00;31:*.exe=00;31:*.com=00;31:*.tar=01;40;37:*.zip=01;40;37:*.z=01;40;37:*.Z=01;40;37:*.gz=01;40;37:*.uu=01;40;37:*.bz2=01;40;37:*.bz=01;40;37:*.tz=01;40;37:*.jpg=00;35:*.jpeg=00;35:*.gif=00;35:*.bmp=00;35:*.xbm=00;35:*.xpm=00;35:*.ppm=00;35:*.png=00;35:*.tif=00;35:*.tiff=00;35:*.mpg=00;35:*.mpeg=00;35:*.wav=00;35:*.ps=00;35:*.eps=00;35:*.pdf=00;35:*.bib=00;32:*.tex=00;32:*.sty=00;32:*.cls=00;32:*.bst=00;32:ex=00;31:"
+  alias ls /bin/ls -G
+endif
+
+# Other ls:
+alias lm 'ls | more'
+alias ll 'ls -ltr'
+
+# Git shortcuts:
+alias gb 'git branch'
+alias gc 'git checkout \!*'
+alias gs 'git status'
+
+# Safety net - make a temporary directory and redirect rm there
+if ($linux) then
+  setenv TRASH /tmp/${USER}
+  if ( ! -e ${TRASH} ) then
+    mkdir ${TRASH}
+    echo " "
+    echo "Created new rm directory."
+    echo " "
+  else if ( ! -d ${TRASH} ) then
+    echo " "
+    echo "${TRASH} is not a directory..."
+    /usr/bin/rm ${TRASH}
+    echo "Removed ${TRASH}"
+    mkdir ${TRASH}
+    echo "Created new rm directory"
+    echo " "
+  endif
+else if ($darwin) then
+  setenv TRASH ${HOME}/.Trash
+endif
+alias delete '/bin/rm'
+alias rm 'mv -f \!* ${TRASH}/'
+alias recover 'mv ${TRASH}/\!* .'
+alias emptytrash '/bin/rm -rf ${TRASH}/*'
+
+
+if (${LOCATION} == SLAC) then
+  setenv PRINTER ki3bw
+  setenv BLACK_AND_WHITE_PRINTER  ki3bw
+  setenv COLOUR_PRINTER           ki3co
+  setenv DUPLEX_OPTION	          ' '
+else if (${LOCATION} == KIPAC) then
+  setenv PRINTER kipac-bw
+  setenv BLACK_AND_WHITE_PRINTER  kipac-bw
+  setenv COLOUR_PRINTER           kipac-color
+  setenv DUPLEX_OPTION	          ' '
+else if (${LOCATION} == UCSB) then
+  setenv PRINTER morgan
+#   setenv BLACK_AND_WHITE_PRINTER  astro
+#   setenv BLACK_AND_WHITE_PRINTER  hpdoc
+  setenv BLACK_AND_WHITE_PRINTER  morgan
+#   setenv COLOUR_PRINTER           colorastro
+  setenv COLOUR_PRINTER           morgan
+  setenv DUPLEX_OPTION	          '-o sides=two-sided-long-edge'
+#  setenv DUPLEX_OPTION	          ' '
+else if (${LOCATION} == Oxford) then
+  setenv PRINTER NULL
+  setenv BLACK_AND_WHITE_PRINTER  NULL
+  setenv COLOUR_PRINTER           NULL
+  setenv DUPLEX_OPTION	          ' '
+endif
+
+alias lj    'psnup -1 -pletter \!* | lp -d ${BLACK_AND_WHITE_PRINTER} ${DUPLEX_OPTION}'
+alias lj2up 'psnup -2 -pletter \!* | lp -d ${BLACK_AND_WHITE_PRINTER} ${DUPLEX_OPTION}'
+alias lj4up 'psnup -4 -pletter \!* | lp -d ${BLACK_AND_WHITE_PRINTER} ${DUPLEX_OPTION}'
+
+alias ljcolour    'psnup -1 -pletter \!* | lp -d ${COLOUR_PRINTER} ${DUPLEX_OPTION}'
+alias lj2upcolour 'psnup -2 -pletter \!* | lp -d ${COLOUR_PRINTER} ${DUPLEX_OPTION}'
+alias lj4upcolour 'psnup -4 -pletter \!* | lp -d ${COLOUR_PRINTER} ${DUPLEX_OPTION}'
+                                                                               
+
+# mpeg_play:
+alias mpeg_play "${HOME}/bin/mpeg_play -dither color -quiet -controls off"
+
+# Windows via Citrix server - SLAC specific:
+if (${LOCATION} == SLAC) alias windows '/afs/slac.stanford.edu/package/citrix/common/bin/wfcmgr'
+
+# Redefine dvips so that an output file is always produced:
+alias dvips 'dvips -f -Pcmz \!* -o \!*:r.ps; echo "Output written to \!*:r.ps"'
+
+# Redefine a2ps to give suitably named single column output:
+alias a2ps 'a2ps -R --columns 1 \!* -o \!*:r.ps'
+
+# Short version of ps2pdf:
+alias ps2pdf 'ps2pdf -dPDFsettings=/prepress \!* ' 
+
+# cvs update without the cruft:
+alias cvsup   "cvs up -d |& grep -v '?' | grep -v 'update'"
+alias svnstat "svn status |& grep -v '?'"
+
+# Kill firefox! kill python!
+alias killfirefox "kill -9 `ps -eal | grep firefox | grep -v 'grep' | awk '{print $4}'`"
+alias killpython "kill -9 `ps -eal | grep python | grep -v 'grep' | awk '{print $4}'`"
+
+alias pw 'alibaba'
+
+# Useful reset environment command:
+alias refresh 'unsetenv COOKIE ; source $HOME/.login ; source $HOME/.cshrc ; rehash'
+if ($VB) echo ".cshrc: use 'refresh' to rerun environment setup"
+setenv COOKIE 1
+
+# List latest files:
+alias new 'ls -latr | tail' 
+
+# Make a directory sensibly and move there:
+alias mkdirf 'mkdir -p \!* && cd \!*' 
+
+# Crontab on afs - SLAC specific!:
+if (${LOCATION} == SLAC) alias crontab trscrontab
+
+# # gv at UCSB:
+# if (${LOCATION} == UCSB) alias gv ggv
+
+# seq on darwin:
+if ($darwin) alias seq seq.csh
+
+# make on darwin:
+if (${LOCATION} == laptop) alias gmake make
+
+# Lenstool - dont want to put src on path:
+alias lenstool $LENSTOOL_DIR/src/lenstool
+
+# Remote logins:
+alias ssh "ssh -tAX"
+alias bonn "ssh -p 1234 phil@gate3.astro.uni-bonn.de"
+alias ki-ls "\ssh -tAY pjm@ki-ls07.slac.stanford.edu"
+alias tartufo "ssh pjm@tartufo.physics.ucsb.edu"
+alias hanuta "ssh pjm@hanuta.physics.ucsb.edu"
+alias lsstbook "ssh pjm@book.lsstcorp.org"
+alias oxford "ssh marshallp@asosx106.physics.ox.ac.uk"
+
+# Garish yellow top in a new window
+# alias top 'xterm -geometry 80x80 -bg yellow -fg black -e top &'
+
+# Spannering
+alias mroe more
+
+# Killing teabuzzers:
+alias killtea "kill `ps -eal | grep teatime | awk '{print $4}'`"
+
+# ds9:
+if (${LOCATION} == laptop) then
+#  alias ds9 '/Applications/SAOImage\ DS9.app/Contents/MacOS/ds9'
+  alias ds9 '/Applications/ds9'
+endif
+
+# MrLens
+alias mrl 'idl $MRL/idl/mrl'
+
+# TinyTim - works by alias so should go in .cshrc, but needs environmet
+# variables set so...:
+
+# TODO: install TinyTim at UCSB
+# setenv TINYTIM /afs/slac/g/ki/ki04/soft/tinytim
+# alias tiny1 $TINYTIM/tiny1
+# alias tiny2 $TINYTIM/tiny2
+# alias tiny3 $TINYTIM/tiny3
+
+# PS1 data analysis:
+
+if (${LOCATION} == MPIA) then
+  echo "Setting up PS1 data analysis environment..."
+  alias ps1go 'psconfig ipp-20110218'
+  \rm -f $HOME/.ipprc ; ln -s /home/sweeney/.ipprc $HOME/.ipprc
+endif
+
+#-------------------------------------------------------------------------------
+#
+# # Spam filtering by procmail - not used at KIPAC:
+# 
+# alias mailjunk  'cat /u/ki/pjm/mail/.procmail.log | \ne - -with /u/ki/pjm/.procmail.ne'
+# alias mailcheck '/info/procmail/examples/mailstat -k /u/ki/pjm/mail/.procmail.log'
+# alias mailtidy  '/info/procmail/examples/mailstat /u/ki/pjm/mail/.procmail.log;echo "log file emptied..."'
+# alias maillog 'more /u/ki/pjm/mail/.procmail.log'
+# 
+#===============================================================================
+
+
+# 2012-02-29 (Wednesday) 15:07 EST
+# 
+# Switched to homebrew-installed python distribution (2.7.2) with Dan F-M
+
+# Setting PATH for EPD-7.1-2
+# The orginal version is saved in .cshrc.pysave
+# set path=(/Library/Frameworks/EPD64.framework/Versions/Current/bin $path)
+
+#===============================================================================

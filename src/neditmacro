@@ -1,0 +1,732 @@
+# ==============================================================================
+# This file contains the following functions:
+#       detab
+#       retab_get_endcol
+#       retab_retab_line
+#       retab_retab
+#       retab
+#       redetab_selection
+#       converttabspace
+#       showtabspace
+# ==============================================================================
+
+# ==============================================================================
+# detab(text, leftcol, startcol, keeptrailing, tabwidth): expands tabs to spaces
+#       in the text, returning the converted text. If leftcol is specified, it
+#       designates the start position of the conversion. If startcol is
+#       specified, it designates the start column of the text. If keeptrailing
+#       is "keeptrailing", tab conversion continues upto the right hand newline,
+#       even if this contains just spaces; otherwise, trailing tabs and spaces
+#       are removed. Tab width is given by tabwidth. By default, leftcol is 0,
+#       keeptrailing is false and tabwidth is set to the NEdit $tab_dist value.
+#       Note that if the text does not terminate with a newline, trailing tabs
+#       and spaces will be converted up to the end of the text.
+# ==============================================================================
+
+define detab
+  {
+  text_in = $1
+  leftcol = 0
+  startcol = 0
+  keeptrailing = 0
+  tabwidth = $tab_dist
+
+  if ($n_args >= 2) leftcol = $2 + 0
+  if ($n_args >= 3)
+    startcol = $3 + 0
+  else
+    startcol = leftcol
+  if ($n_args >= 4) keeptrailing = ($4 == "keeptrailing")
+  if ($n_args >= 5) tabwidth = $5 + 0
+
+  if (tabwidth == 0)
+    tabwidth = $tab_dist
+  if (tabwidth == 0)
+    tabwidth = 8
+
+  text_out = ""
+  col = startcol
+  last_col = col
+  pos = 0
+  len = length(text_in)
+
+  # evaluate the maximum tab space string
+  tabspaces = " "
+  for (i = length(tabspaces); i < tabwidth; i = length(tabspaces))
+    tabspaces = tabspaces tabspaces
+  tabspaces = substring(tabspaces, 0, tabwidth)
+
+  # instead of growing text_out one character at a time, we grow only the
+  # current line - this avoids per-character reallocation of text_out and
+  # improves performance
+
+  line_out = ""
+
+  # loop for each character
+  while (pos <= len)
+    {
+    if (pos == len)
+      ch = ""
+    else
+      ch = substring(text_in, pos, pos + 1)
+
+    pos++
+
+    if (ch == " ")
+      col++
+    else if (ch == "\t")
+      {
+      col += tabwidth
+      col -= col % tabwidth
+      }
+    else
+      {
+      trailing = keeptrailing
+      if (ch != "\n")
+        trailing = 1
+      if (trailing)
+        {
+        while (col > last_col)
+          {
+          if (col - last_col >= tabwidth)
+            {
+            line_out = line_out tabspaces
+            last_col += tabwidth
+            }
+          else
+            {
+            line_out = line_out substring(tabspaces, 0, col - last_col)
+            last_col = col
+            }
+          }
+        }
+      else
+        col = last_col  # no spaces to be added
+
+      # add the current non-space-or-tab character
+      line_out = line_out ch
+
+      if (ch == "\n" || ch == "")
+        {
+        # line done: store result and reset col and line_out for next line
+        col = leftcol
+        text_out = text_out line_out
+        line_out = ""
+        }
+      else
+        col++
+
+      last_col = col
+      }
+    }
+
+  return text_out
+  }
+
+# ==============================================================================
+# retab_get_endcol(text, leftcol, prevcol, tabwidth): determines the end column
+#       of a piece of text which cannot be retabbed. This function is to be
+#       called from retab() only.
+# ==============================================================================
+
+define retab_get_endcol
+  {
+  text = $1             # the text whose end column to calculate
+  leftcol = $2          # after each newline, we start in this column
+  col = $3              # we start counting columns from here
+  tabwidth = $4         # how big is a tab?
+
+  # skip to the last line in the passed text
+  pos = search_string(text, "(.|\n)*\n", 0, "regex")
+  if (pos != -1)
+    {
+    pos = $search_end   # set pos to just after last "\n"
+    col = leftcol       # reset col to left hand column number
+    }
+  else
+    pos = 0             # no "\n" found; initial value of col good
+
+  len = length(text)
+
+  while (pos < len)
+    {
+    ch = substring(text, pos, pos + 1)
+    if (ch == "\t")
+      {
+      col += tabwidth
+      col -= col % tabwidth
+      }
+    else
+      col++
+
+    pos++
+    }
+
+  return col
+  }
+
+# ==============================================================================
+# retab_retab_line(text, col, keeptrailing, tabwidth, minspaces, leadingonly):
+#       returns the converted, retabbed line. This function is to be called from
+#       retab_retab() only. text must not contain newlines.
+# ==============================================================================
+
+define retab_retab_line
+  {
+  text_in = $1          # the line to be converted
+  col = $2              # we start counting columns from here
+  keeptrailing = $3     # do we keep trailing spaces?
+  tabwidth = $4         # how big is a tab?
+  minspaces = $5        # what is the smallest sequence of spaces we can change?
+  leadingonly = $6      # do we stop after the initial sequence of spaces?
+
+  text_out = ""
+  len = length(text_in)
+  pos = 0
+  last_col = col
+  next_col = col
+
+  minspacestr = " "
+  while (length(minspacestr) < minspaces)
+    minspacestr = minspacestr minspacestr
+
+  while (pos <= len)
+    {
+    if (pos == len)
+      ch = ""
+    else
+      ch = substring(text_in, pos, pos + 1)
+
+    pos++
+
+    if (ch == "\t")
+      {
+      col += tabwidth
+      col -= col % tabwidth
+      }
+    else if (ch == " ")
+      {
+      col++
+      }
+    else if (ch != "" || keeptrailing)
+      {
+      if (col > last_col && col - last_col < minspaces)
+        {
+        text_out = text_out substring(minspacestr, 0, col - last_col)
+        last_col = col
+        }
+      else
+        {
+        next_col =  last_col + tabwidth
+        next_col -= next_col % tabwidth
+
+        while (col > last_col)
+          {
+          if (col >= next_col)
+            {
+            text_out = text_out "\t"
+            last_col = next_col
+            next_col += tabwidth
+            }
+          else
+            {
+            text_out = text_out " "
+            last_col++
+            }
+          }
+        }
+      text_out = text_out ch
+      col++
+      last_col++
+      if (leadingonly)
+        break
+      }
+    }
+
+  # tack on the rest of the string, if any
+  if (pos < len)
+    text_out = text_out substring(text_in, pos, length(text_in))
+
+  # tidy the line if necessary
+  if (!keeptrailing)
+    {
+    pos = search_string(text_out, "[ \t]+$", 0, "regex")
+    if (pos != -1)
+      text_out = substring(text_out, pos, length(text_out))
+    }
+
+  return text_out
+  }
+
+# ==============================================================================
+# retab_retab(text, leftcol, prevcol, keeptrailing, tabwidth, minspaces,
+#       leadingonly): returns the converted, retabbed text. This function is to
+#       be called from retab() only.
+# ==============================================================================
+
+define retab_retab
+  {
+  text_in = $1          # the text to be converted
+  leftcol = $2          # after each newline, we start in this column
+  col = $3              # we start counting columns from here
+  keeptrailing = $4     # do we keep trailing spaces?
+  tabwidth = $5         # how big is a tab?
+  minspaces = $6        # what is the smallest sequence of spaces we can change?
+  leadingonly = $7      # do we stop after the initial sequence of spaces?
+  keeptraillast = $8    # do we keep trailing spaces for last line?
+
+  text_out = ""
+
+  # loop for each line
+  is_last = 0
+  is_empty = 0
+  SoL = 0
+
+  for (EoL = search_string(text_in, "\n", 0); \
+       !is_last; \
+       EoL = search_string(text_in, "\n", SoL))
+    {
+    # book-keeping: is this the last line? does it have a newline?
+    if (EoL == -1)
+      {
+      EoL = length(text_in)
+      is_last = 1
+      newline_char = ""
+      keeptrailing = keeptraillast
+      }
+    else
+      newline_char = substring(text_in, EoL, $search_end)
+
+    is_empty = (SoL == EoL)
+
+    # extract line data
+    line = substring(text_in, SoL, EoL)
+
+    # deal with line
+    line_out = retab_retab_line(line, col, keeptrailing, tabwidth, \
+                                minspaces, leadingonly)
+    col = leftcol
+
+    # add to output, with the line ending newline character if any
+    text_out = text_out line_out newline_char
+
+    # calculate new start extract position
+    SoL = EoL + 1
+    }
+
+  return text_out
+  }
+
+# ==============================================================================
+# retab(text, leftcol, startcol, keeptrailing, tabwidth, minspaces, leadingonly,
+#       avoidRE): replaces sequences of spaces and tabs to the equivalent
+#       minimal sequences of tabs. If leftcol is specified, it designates the
+#       start position of the conversion. If keeptrailing is "keeptrailing", tab
+#       conversion continues upto the right hand edge, even if this contains
+#       just spaces; otherwise, trailing tabs and spaces are removed. Tab width
+#       is given by tabwidth. minspaces indicates the minimal length of a
+#       sequence of spaces that can be considered for conversion. If leadingonly
+#       is "leadingonly", only space sequences at the left hand edge of each
+#       line will be converted. If avoidRE is set, it is supposed to consist of
+#       a regular expression for a part of a line which must not be converted
+#       (for example, within C strings). By default, leftcol is 0, keeptrailing
+#       is false, tabwidth is set to the NEdit $tab_dist value, minspaces is set
+#       to 2, and avoidRE is "".
+# ==============================================================================
+
+define retab
+  {
+  text_in = $1
+  leftcol = 0
+  startcol = 0
+  keeptrailing = 0
+  tabwidth = $tab_dist
+  minspaces = 2
+  leadingonly = 0
+  avoidRE = ""
+
+  if ($n_args >= 2) leftcol = $2 + 0
+  if ($n_args >= 3) startcol = $3 + 0
+  if ($n_args >= 4) keeptrailing = ($4 == "keeptrailing")
+  if ($n_args >= 5) tabwidth = $5 + 0
+  if ($n_args >= 6) minspaces = $6 + 0
+  if ($n_args >= 7) leadingonly = ($7 == "leadingonly")
+  if ($n_args >= 8) avoidRE = $8
+
+  if (tabwidth == 0)
+    tabwidth = $tab_dist
+  if (tabwidth == 0)
+    tabwidth = 8
+
+  if (minspaces < 1)
+    minspaces = 2
+
+  if (minspaces > tabwidth)
+    minspaces = tabwidth
+
+  text_out = ""
+  left = ""
+  leave = ""
+
+  # loop for each line
+  is_last = 0
+  is_empty = 0
+  prevcol = startcol
+  beg = 0
+  end = 0
+  pos = -1
+  keeptraillast = keeptrailing
+
+  if (avoidRE != "")
+    {
+    for (pos = search_string(text_in, avoidRE, beg, "regex"); \
+         pos != -1; \
+         pos = search_string(text_in, avoidRE, beg, "regex"))
+      {
+      end = $search_end
+      left = substring(text_in, beg, pos)
+      leave = substring(text_in, pos, end)
+      beg = end
+      len = length(left)
+
+      if (!keeptrailing)
+        keeptraillast = (len > 0 && substring(left, len - 1, len) != "\n")
+
+      left = retab_retab(left, leftcol, prevcol, keeptrailing, \
+                         tabwidth, minspaces, leadingonly, keeptraillast)
+
+      # find the start of the last line in the converted string, left
+      last_bit_pos = search_string(left, "(.|\n)*\n", 0, "regex")
+      last_bit_end = $search_end
+      if (last_bit_pos == -1)
+        {
+        last_bit_end = 0
+        prevcol = leftcol
+        }
+
+      # calculate prevcol for last line of conversion
+      prevcol = retab_get_endcol(substring(left, last_bit_end, length(left)), \
+                                 leftcol, prevcol, tabwidth)
+
+      # now calculate prevcol for avoided piece
+      prevcol = retab_get_endcol(leave, leftcol, prevcol, tabwidth)
+
+      # and add what we have to the current output string...
+      text_out = text_out left leave
+      }
+    }
+
+  # when we get here, end indicates the part of text_in to convert
+  left = substring(text_in, end, length(text_in))
+  len = length(left)
+  if (!keeptrailing)
+    keeptraillast = (len > 0 && substring(left, len - 1, len) != "\n")
+
+  left = retab_retab(left, leftcol, prevcol, keeptrailing, \
+                     tabwidth, minspaces, leadingonly, keeptraillast)
+
+  text_out = text_out left
+
+  return text_out
+  }
+
+# ==============================================================================
+# redetab_selection(tab_fn, avoidRE): converts the selected text to change
+#       spaces to tabs, or tabs to spaces, depending on whether tab_fn contains
+#       the word "retab" or "detab". If neither "retab" nor "detab" is present
+#       in tab_fn, nothing is done. If tab_fn also contains "trailing",
+#       space/tab characters after the last non-space character will be
+#       converted. If tab_fn contains "leading", only leading spaces will be
+#       transformed. Otherwise, defaults are used. avoidRE is as in retab().
+# ==============================================================================
+
+define redetab_selection
+  {
+  func = "retab"
+  trail = ""
+  lead = ""
+  call_fn = ""
+  tab_fn = $1
+  avoidRE = ""
+
+  if ($n_args >= 2)
+    avoidRE = $2
+
+  # work out function
+  if (search_string(tab_fn, "<retab>", 0, "regex") != -1)
+    call_fn = "retab"
+  else if (search_string(tab_fn, "<detab>", 0, "regex") != -1)
+    call_fn = "detab"
+  else
+    {
+    beep()
+    return
+    }
+
+  # work out options
+  if (search_string(tab_fn, "<trailing>", 0, "regex") != -1)
+    trail = "keeptrailing"
+
+  if (search_string(tab_fn, "<leading>", 0, "regex") != -1)
+    lead = "leadingonly"
+
+  # work out selection
+  if ($selection_start == -1)
+    {
+    beep()
+    return
+    }
+
+  rectangular = ($selection_left != -1)
+
+  beg = $selection_start
+  end = $selection_end
+  adj = 0
+
+  text = get_selection()
+  len = length(text)
+
+  if (!rectangular)
+    {
+    # non-rectangular: may have incomplete line selection
+    beginning_of_selection()
+    column = $column                    # may not be zero
+
+    # check out end of selection: does it go upto a line end?
+    if (substring(text, len - 1, len) != "\n")
+      {
+      if (get_character(end) == "\n")   # next character is a newline
+        {
+        adj = 1
+        select(beg, end + 1)            # reselect to include newline
+        text = get_selection()
+        }
+      }
+    }
+
+  if (call_fn == "detab")
+    text = detab(text, 0, column, trail)
+  else if (call_fn == "retab")
+    text = retab(text, 0, column, trail, $tab_dist, 2, lead, avoidRE)
+
+  replace_selection(text)
+  select(beg, beg + length(text) - adj)
+  }
+
+# ==============================================================================
+# converttabspace(text, tabwidth, space, tabbeg, tabfill, tabend, newl, cret):
+#       replaces sequences of spaces, tabs, newlines and carriage returns with
+#       the space, tabbeg, tabfill, tabend, newl and cret characters for
+#       visualisation.
+# converttabspace(text, "default"): replaces spaces, tabs and newlines with
+#       themselves.
+# converttabspace(text, "display"): replaces spaces, tabs and newlines with
+#       suitable characters form iso8859-1.
+# ==============================================================================
+
+define converttabspace
+  {
+  text_in = $1
+
+  tabwidth = $tab_dist
+  space = " "
+  tabbeg = ""
+  tabfill = ""
+  tabend = "\t"
+  newl = "\n"
+  cret = "\r"
+
+  if ($n_args == 1 || $n_args == 2 && $2 == "default")
+    {
+    tabwidth = $tab_dist
+    space = " "
+    tabbeg = ""
+    tabfill = ""
+    tabend = "\t"
+    newl = "\n"
+    cret = "\r"
+    }
+  else if ($n_args == 2 && $2 == "display")
+    {
+    tabwidth = $tab_dist
+    space = "·"
+    tabbeg = " "
+    tabfill = " "
+    tabend = "»"
+    newl = "¶\n"
+    cret = "?"
+    }
+  else
+    {
+    if ($n_args >= 2) tabwidth = $2 + 0
+    if ($n_args >= 3) space = $3
+    if ($n_args >= 4) tabbeg = $4
+    if ($n_args >= 5) tabfill = $5
+    if ($n_args >= 6) tabend = $6
+    if ($n_args >= 7) newl = $7
+    if ($n_args >= 8) cret = $8
+    }
+
+  if (tabwidth == 0)
+    tabwidth = $tab_dist
+  if (tabwidth == 0)
+    tabwidth = 8
+
+  text_out = ""
+  line_out = ""
+  col = 0
+  last_col = col
+  pos = 0
+  len = length(text_in)
+
+  # loop for each character
+  while (pos <= len)
+    {
+    if (pos == len)
+      ch = ""
+    else
+      ch = substring(text_in, pos, pos + 1)
+
+    pos++
+
+    if (ch == "")
+      {
+      text_out = text_out line_out
+      line_out = ""
+      col = 0
+      }
+    else if (ch == "\n")
+      {
+      text_out = text_out line_out newl
+      line_out = ""
+      col = 0
+      }
+    else if (ch == " ")
+      {
+      line_out = line_out space
+      col++
+      }
+    else if (ch == "\t")
+      {
+      last_col = col
+      col += tabwidth
+      col -= col % tabwidth
+
+      if (col - last_col == 1)
+        line_out = line_out tabend
+      else if (col - last_col == 2)
+        line_out = line_out tabbeg tabend
+      else
+        {
+        last_col += 2
+        line_out = line_out tabbeg
+        while (last_col < col)
+          {
+          line_out = line_out tabfill
+          last_col++
+          }
+        line_out = line_out tabend
+        }
+      }
+    else if (ch == "\r")
+      {
+      line_out = line_out cret
+      col = 0
+      }
+    else
+      {
+      line_out = line_out ch
+      col++
+      }
+    }
+
+  if (line_out != "")
+    text_out = text_out line_out
+
+  return text_out
+  }
+
+# ==============================================================================
+# showtabspace(tabwidth, space, tabbeg, tabfill, tabend, newl, cret): replaces
+#       sequences of spaces, tabs, newlines and carriage returns with the space,
+#       tabbeg, tabfill, tabend, newl and cret characters for visualisation.
+# showtabspace("default"): replaces spaces, tabs and newlines with themselves.
+# showtabspace("display"): replaces spaces, tabs and newlines with suitable
+#       characters form iso8859-1.
+# ==============================================================================
+
+define showtabspace
+  {
+  beg = $selection_start
+  end = $selection_end
+
+  deselect_all()
+
+  if (beg == -1 || $selection_left != -1)
+    {
+    beep()
+    return
+    }
+
+  set_cursor_pos(beg)
+  beginning_of_line()
+  beg = $cursor
+  set_cursor_pos(end)
+  end_of_line()
+  end = $cursor
+
+  select(beg, end)
+
+  text_in = get_selection()
+
+  tabwidth = $tab_dist
+  space = " "
+  tabbeg = ""
+  tabfill = ""
+  tabend = "\t"
+  newl = "\n"
+  cret = "\r"
+
+  if ($n_args == 0 || $n_args == 1 && $1 == "default")
+    {
+    tabwidth = $tab_dist
+    space = " "
+    tabbeg = ""
+    tabfill = ""
+    tabend = "\t"
+    newl = "\n"
+    cret = "\r"
+    }
+  else if ($n_args == 1 && $1 == "display")
+    {
+    tabwidth = $tab_dist
+    space = "·"
+    tabbeg = " "
+    tabfill = " "
+    tabend = "»"
+    newl = "¶\n"
+    cret = "?"
+    }
+  else
+    {
+    if ($n_args >= 1) tabwidth = $1 + 0
+    if ($n_args >= 2) space = $2
+    if ($n_args >= 3) tabbeg = $3
+    if ($n_args >= 4) tabfill = $4
+    if ($n_args >= 5) tabend = $5
+    if ($n_args >= 6) newl = $6
+    if ($n_args >= 7) cret = $7
+    }
+
+  if (tabwidth == 0)
+    tabwidth = $tab_dist
+  if (tabwidth == 0)
+    tabwidth = 8
+
+  text_out = converttabspace(text_in, tabwidth, space, \
+                             tabbeg, tabfill, tabend, newl, cret)
+
+  replace_selection(text_out)
+  select(beg, beg + length(text_out))
+  }
+  

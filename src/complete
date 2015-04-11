@@ -1,0 +1,136 @@
+# ------------------------------------------------------------------------------
+
+# tcsh(1) v. 6.05 completion rules
+# Read by ~/.tcshrc for interactive sessions.
+# This is a completely unnecessary luxury :-)
+# The tcsh(1) man page declares the syntax to be experimental, so watch out!
+
+# History: specialised for PJM's use, Jan 2002 onwards
+
+# ------------------------------------------------------------------------------
+
+# PJM-specific programs:
+complete McCompile    'n/*/f:*.inc/'
+complete LensEnt2    'n/*/f:*.inc/'
+complete LensTractor.py    'n/*/f:*.{fit,fits,fts,FIT,FITS,FTS}/'
+complete CornerPlotter    'n/*/f:*.{cpt,txt}/'
+complete gallery.pl 'n/*/f:*.{ps,eps,png,gif,tif,tiff,jpg,jpeg,bmp,xpm,xbm,ppm,PS,EPS,PNG,GIF,TIF,TIFF,JPG,JPEG,BMP,XPM,XBM,PPM}/'
+
+# PJM's printing macros:
+complete lj 'n/*/f:*.{ps,eps,PS,EPS,psz}/'
+complete lj2up 'n/*/f:*.{ps,eps,PS,EPS,psz}/'
+complete ljcolour 'n/*/f:*.{ps,eps,PS,EPS,psz}/'
+complete lj2upcolour 'n/*/f:*.{ps,eps,PS,EPS,psz}/'
+complete ljcolour2 'n/*/f:*.{ps,eps,PS,EPS,psz}/'
+complete lj2upcolour2 'n/*/f:*.{ps,eps,PS,EPS,psz}/'
+
+# ------------------------------------------------------------------------------
+
+# Postscript:
+complete gs	'n/*/f:*.{ps,eps,PS,EPS,psz}/'
+complete gv 'n/*/f:*.{ps,eps,PS,EPS,psz,ps.gz,eps.gz}/'
+complete ggv 'n/*/f:*.{ps,eps,PS,EPS,psz,ps.gz,eps.gz}/'
+complete ghostview 'n/*/f:*.{ps,eps,PS,EPS,psz}/'
+complete ps2pdf 'n/*/f:*.{ps,eps,PS,EPS}/'
+
+# Printing:
+complete lp 'n/*/f:*.{ps,eps,PS,EPS,psz}/'
+complete lpr 'n/*/f:*.{ps,eps,PS,EPS,psz}/'
+
+# Image viewers:
+complete xv 'n/*/f:*.{ps,eps,png,gif,tif,tiff,jpg,jpeg,bmp,xpm,xbm,ppm,PS,EPS,PNG,GIF,TIF,TIFF,JPG,JPEG,BMP,XPM,XBM,PPM}/'
+complete gimp 'n/*/f:*.{fits,fit,fts,ps,eps,png,gif,tif,tiff,jpg,jpeg,bmp,xpm,xbm,ppm,FITS,FIT,FTS,PS,EPS,PNG,GIF,TIF,TIFF,JPG,JPEG,BMP,XPM,XBM,PPM}/'
+complete eog 'n/*/f:*.{ps,eps,png,gif,tif,tiff,jpg,jpeg,bmp,xpm,xbm,ppm,PS,EPS,PNG,GIF,TIF,TIFF,JPG,JPEG,BMP,XPM,XBM,PPM}/'
+complete xdvi	'n/*/f:*.dvi/'
+complete dvips	'n/*/f:*.{dvi}/'
+complete dvipdf	'n/*/f:*.{dvi}/'
+
+# Open office:
+complete ooimpress      'n/*/f:*.{sxi,ppt}/'
+complete oowriter       'n/*/f:*.{doc}/'
+complete ooffice        'n/*/f:*.{doc,xls,sxi,ppt,odp}/'
+
+# Astronomy packages, code etc:
+complete saoimage	'n/*/f:*.{fit,fits,fts,FIT,FITS,FTS}/'
+complete ds9	'n/*/f:*.{fit,fits,fts,FIT,FITS,FTS}/'
+complete fv	      'n/*/f:*.{fit,fits,fts,FIT,FITS,FTS}/'
+complete idl      'n/*/f:*.{idl,run}/'
+complete lc    'n/*/f:*.cat/'
+
+# Others:
+complete mpeg_play	'n/*/f:*.{mpg,mpeg,MPG,MPEG}/'
+complete mplayer	'n/*/f:*.{mpg,mpeg,MPG,MPEG,gif,GIF,avi,AVI}/'
+
+# Acrobat file reading
+complete acroread	'p/*/f:*.pdf/'
+complete pdf2ps	'p/*/f:*.pdf/'
+
+# Process control  
+complete kill	'c/-/S/' 'n/*/`ps -u | awk \{print\ \$2\} | grep -v PID`/'
+complete renice   'c/-/S/' 'n/*/`ps -u | awk \{print\ \$2\} | grep -v PID`/'
+
+# Some basic commands with useful expansions
+complete ln		c/--/"(backup directory force no-dereference \
+    			interactive symbolic suffix verbose version-control \
+			help version)"/ \
+			c/-/"(b d F f i n S s V v -)"/ \
+			n/{-S,--suffix}/x:'<suffix>'/ \
+			n/{-V,--version-control}/"(t numbered nil existing \
+			never simple)"/ n/-/f/ N/-/x:'<link_name>'/ \
+			p/1/f/ p/2/x:'<link_name>'/
+
+# General purpose commands:
+complete alias	'p/1/a/'
+complete bunzip2	'n/*/f:*.{bz2}/'
+complete cc	'n/*/f:*.[cao]/'
+complete cd	'p/1/d/' 'n/*/n/'
+complete chgrp	'p/1/g/'
+complete chown	'p/1/u/'
+complete complete	'p/1/c/' 'n/*/n/'
+complete dbx	'p/2/f:core*/' 'n/*/c/'
+complete f77	'n/*/f:*.[Ffao]/'
+complete find	'n/-name/f/' 'n/-newer/f/' 'n/-{,n}cpio/f/'\
+		'n/-fstype/(nfs cdfs iso9660 msdos)/'\
+		'n/-type/(b c d f l p s)/'\
+		'n/-user/u/' 'n/-group/g/' 'n/-exec/c/' 'n/-ok/c/'\
+		'c/-/(xdev fstype inum name perm prune type links user group\
+		 size atime mtime ctime exec ok print cpio ncpio newer depth\
+		 ls)/'\
+		'n/*/d/'
+complete gcc	'n/*/f:*.[cao]/'
+complete gdb	'p/2/(core)/' 'n/*/c/'
+complete gfortran	'n/*/f:*.[Ffao]/'
+complete grep	'p/1/n/'
+complete gunzip	'n/*/f:*.{gz,Z,tgz}/'
+complete gzcat	'n/*/f:*.{gz,Z,tgz}/'
+complete last	'n/*/u/'
+complete latex	'n/*/f:*.{tex,dtx}/'
+complete pdflatex	'n/*/f:*.{tex,dtx}/'
+# .dtx is used for the self-documenting LaTeX2e class file sources.
+complete mail	'n/</f/' 'n/*/u/'
+complete make   'n/-f/f:*.mk/'
+complete man	'n/*/c/'
+complete printenv 'p/1/e/' 'n/*/n/'
+complete ps	'n/-[uU]/u/'
+complete python	'n/*/f:*.{py}/'
+complete rmdir	'n/*/d/'
+complete rwho	'n/*/u/'
+complete set	'p/1/s/'
+complete setenv	'p/1/e/'
+complete tar	'p/1/(cvf tvf xvf cvfz tvfz xvfz)/'\
+		'n/*fz/f:{*.{tgz,tar.gz,tar.Z},{,n}rmt0h}/'\
+		'p/2/f:{*.tar,{,n}rmt0h}/'
+complete talk	'c/*@/$fingerhosts/' 'p/1/u/@'
+complete uncomplete	'n/*/X/'
+complete unset	'n/*/s/'
+complete unsetenv	'n/*/e/'
+complete unzip	'n/*/f:*.{zip,ZIP}/'
+complete which	'n/*/c/'
+complete write	'p/1/u/'
+# complete zip ???
+complete zless	'n/*/f:*.{gz,Z}/'
+
+
+# Big one - completion of scp...
+
+complete scp "c,*:/,F:/," "c,*:,F:$HOME," 'c/*@/$hostlist/:/'

@@ -1,0 +1,211 @@
+
+
+Notes on installing python packages on charlie:
+
+2012-02-29 (Wednesday) 15:02 EST
+
+Based on instructions at http://www.thisisthegreenroom.com/2011/installing-python-numpy-scipy-matplotlib-and-ipython-on-lion/
+and on scipy website at http://www.scipy.org/Installing_SciPy/Mac_OS_X
+
+
+1) Install homebrew (to supercede fink etc)
+
+  ruby ~/software/homebrew.rb
+
+
+2) Use homebrew to install latest version of python (2.7.2):
+
+  brew install python
+
+     A "distutils.cfg" has been written to:
+       /usr/local/Cellar/python/2.7.2/lib/python2.7/distutils
+     specifing the install-scripts folder as:
+       /usr/local/share/python
+
+     If you install Python packages via "python setup.py install", easy_install, pip,
+     any provided scripts will go into the install-scripts folder above, so you may
+     want to add it to your PATH.
+
+     Distribute has been installed, so easy_install is available.
+     To update distribute itself outside of Homebrew:
+         /usr/local/share/python/easy_install pip
+         /usr/local/share/python/pip install --upgrade distribute
+
+     See: https://github.com/mxcl/homebrew/wiki/Homebrew-and-Python
+     ==> Summary
+     /usr/local/Cellar/python/2.7.2: 4803 files, 81M, built in 3.6 minutes
+
+
+3) Install pip (python package manager):
+
+  easy_install pip
+
+  pip install --upgrade distribute
+
+
+4) Install numpy (only works with gcc-4.2):
+
+  setenv CC /usr/bin/gcc
+  setenv CXX /usr/bin/g++
+  setenv FC /usr/local/bin/gfortran
+  setenv FF /usr/local/bin/gfortran
+
+  pip install numpy
+
+     pjm@charlie > python
+     Python 2.7.2 (default, Feb 29 2012, 15:02:27) 
+     [GCC 4.2.1 (Apple Inc. build 5666) (dot 3)] on darwin
+     Type "help", "copyright", "credits" or "license" for more information.
+     >>> import numpy
+     >>> numpy.__version__
+     '1.6.1'
+     >>> numpy.__file__
+     '/usr/local/Cellar/python/2.7.2/lib/python2.7/site-packages/numpy/__init__.pyc'
+
+(NB. homebrew installs packages in the Cellar)
+
+
+5) Install scipy:
+
+  brew install gfortran
+  sudo brew link gfortran
+
+  setenv CC clang
+  pip install scipy
+
+Errors:
+
+ranlib: archive member: build/temp.macosx-10.4-x86_64-2.7/libarpack_scipy.a(veclib_cabi_f.o) cputype (7) does not match previous archive members cputype (16777223) (all members must match)
+error: Command "ranlib build/temp.macosx-10.4-x86_64-2.7/libarpack_scipy.a" failed with exit status 1
+
+>>> import scipy
+>>> scipy.__file__
+'/usr/local/Cellar/python/2.7.2/lib/python2.7/site-packages/scipy/__init__.pyc'
+>>> scipy.__version__
+'0.10.1'
+>>> from scipy.sparse import linalg
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/usr/local/Cellar/python/2.7.2/lib/python2.7/site-packages/scipy/sparse/linalg/__init__.py", line 8, in <module>
+    from eigen import *
+  File "/usr/local/Cellar/python/2.7.2/lib/python2.7/site-packages/scipy/sparse/linalg/eigen/__init__.py", line 5, in <module>
+    from arpack import *
+  File "/usr/local/Cellar/python/2.7.2/lib/python2.7/site-packages/scipy/sparse/linalg/eigen/arpack/__init__.py", line 2, in <module>
+    from arpack import *
+  File "/usr/local/Cellar/python/2.7.2/lib/python2.7/site-packages/scipy/sparse/linalg/eigen/arpack/arpack.py", line 46, in <module>
+    import _arpack
+ImportError: dlopen(/usr/local/Cellar/python/2.7.2/lib/python2.7/site-packages/scipy/sparse/linalg/eigen/arpack/_arpack.so, 2): Symbol not found: _cnaupd_
+  Referenced from: /usr/local/Cellar/python/2.7.2/lib/python2.7/site-packages/scipy/sparse/linalg/eigen/arpack/_arpack.so
+  Expected in: dynamic lookup
+
+
+Problem is that cnaupd and other fortran files are
+not being compiled correctly.
+Can see that _arpack.so contains *many* undefined objects:
+
+nm /usr/local/Cellar/python/2.7.2/lib/python2.7/site-packages/scipy/sparse/linalg/eigen/arpack/_arpack.so | more
+
+Try gfortran instead of gnu95 - try and get the fortran objects done.
+Need to pip uninstall first.
+Architecture-specific flags are from http://osxastrotricks.wordpress.com/
+
+  setenv MACOSX_DEPLOYMENT_TARGET 10.6
+  setenv ARCH "-arch x86_64"
+  setenv CFLAGS "${ARCH}"
+  setenv FFLAGS "-static -ff2c ${ARCH}"
+  setenv LDFLAGS "-Wall -undefined dynamic_lookup -bundle ${ARCH}"
+
+  setenv F77 gfortran
+  setenv CC clang
+
+  pip install scipy
+
+OK.
+
+Then need to reset LDFLAGS to remove bundle!
+
+  setenv LDFLAGS "-Wall -undefined dynamic_lookup ${ARCH}"
+
+
+
+
+6) Install matplotlib:
+
+pip install matplotlib
+
+    >>> import matplotlib
+    >>> matplotlib.__version__
+    '1.1.0'
+    >>> matplotlib.__file__   
+    '/usr/local/Cellar/python/2.7.2/lib/python2.7/site-packages/matplotlib/__init__.pyc'
+
+
+7) Install pyfits:
+
+pip install pyfits
+
+    >>> import pyfits
+    >>> pyfits.__version__
+    '3.0.6'
+    >>> pyfits.__file__
+    '/usr/local/Cellar/python/2.7.2/lib/python2.7/site-packages/pyfits/__init__.pyc'
+
+
+8) Install asciitable (for ATpy):
+
+pip install asciitable
+
+    >>> import asciitable
+    >>> asciitable.__version__
+    '0.8.0'
+    >>> asciitable.__file__
+    '/usr/local/Cellar/python/2.7.2/lib/python2.7/site-packages/asciitable/__init__.pyc'
+
+
+9) Install python image library
+
+pip install pil
+
+Error:
+  File "/usr/local/Cellar/python/2.7.2/lib/python2.7/site-packages/PIL/Image.py", line 37, in __getattr__
+    raise ImportError("The _imaging C module is not installed")
+ImportError: The _imaging C module is not installed
+
+In more detail:
+
+>>> import _imaging   
+dlopen("/usr/local/Cellar/python/2.7.2/lib/python2.7/site-packages/PIL/_imaging.so", 2);
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+ImportError:
+dlopen(/usr/local/Cellar/python/2.7.2/lib/python2.7/site-packages/PIL/_imaging.so,
+2): Symbol not found: _jpeg_resync_to_restart
+  Referenced from:
+/usr/local/Cellar/python/2.7.2/lib/python2.7/site-packages/PIL/_imaging.so
+  Expected in: dynamic lookup
+ 
+Scrolling back through pip install output, it looks like libjpeg is not being
+linked to properly because my LD_LIBRARY_PATH has /sw/lib first - try removing
+/sw to /sw-deprecated 
+OK, now linked with no errors!
+
+But, its the wrong JPEG ibrary!
+In fits2colorjpeg:
+
+Wrong JPEG library version: library is 80, caller expects 62
+...
+File "/usr/local/Cellar/python/2.7.2/lib/python2.7/site-packages/PIL/ImageFile.py", line 501, in _save
+    raise IOError("encoder error %d when writing image file" % s)
+IOError: encoder error -2 when writing image file
+
+
+brew install libjpg made v8 in Cellar but PIL was picking up v6.2 header from
+/usr/local/include/jpeglib.h, which was v6.2 form my failed manual
+installation. Reinstate v8!
+
+sudo cp /usr/local/Cellar/jpeg/8d/include/jpeglib.h /usr/local/include/
+
+then pip uninstall, pip install
+
+OK good! Now remove all trace of v6 and forget about all this.
+

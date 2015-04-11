@@ -1,0 +1,605 @@
+! Preferences file for NEdit
+!
+! This file is overwritten by the "Save Defaults..." command in NEdit 
+! and serves only the interactively settable options presented in the NEdit
+! "Preferences" menu.  To modify other options, such as key bindings, use 
+! the .Xdefaults file in your home directory (or the X resource 
+! specification method appropriate to your system).  The contents of this 
+! file can be moved into an X resource file, but since resources in this file
+! override their corresponding X resources, either this file should be 
+! deleted or individual resource lines in the file should be deleted for the
+! moved lines to take effect.
+
+nedit.fileVersion: 5.5
+nedit.shellCommands: \
+	spell:Alt+B:s:ED:\n\
+		(cat;echo "") | spell\n\
+	wc::w:ED:\n\
+		wc | awk '{print $1 " lines, " $2 " words, " $3 " characters"}'\n\
+	sort::o:EX:\n\
+		sort\n\
+	number lines::n:AW:\n\
+		nl -ba\n\
+	make:Alt+Z:m:W:\n\
+		make\n\
+	expand::p:EX:\n\
+		expand\n\
+	unexpand::u:EX:\n\
+		unexpand\n
+nedit.macroCommands: \
+	Complete Word:Alt+D::: {\n\
+		# Tuning parameters\n\
+		ScanDistance = 200\n\
+		\n\
+		# Search back to a word boundary to find the word to complete\n\
+		startScan = max(0, $cursor - ScanDistance)\n\
+		endScan = min($text_length, $cursor + ScanDistance)\n\
+		scanString = get_range(startScan, endScan)\n\
+		keyEnd = $cursor-startScan\n\
+		keyStart = search_string(scanString, "<", keyEnd, "backward", "regex")\n\
+		if (keyStart == -1)\n\
+		    return\n\
+		keyString = "<" substring(scanString, keyStart, keyEnd)\n\
+		\n\
+		# search both forward and backward from the cursor position.  Note that\n\
+		# using a regex search can lead to incorrect results if any of the special\n\
+		# regex characters is encountered, which is not considered a delimiter\n\
+		backwardSearchResult = search_string(scanString, keyString, keyStart-1, \\\n\
+		    	"backward", "regex")\n\
+		forwardSearchResult = search_string(scanString, keyString, keyEnd, "regex")\n\
+		if (backwardSearchResult == -1 && forwardSearchResult == -1) {\n\
+		    beep()\n\
+		    return\n\
+		}\n\
+		\n\
+		# if only one direction matched, use that, otherwise use the nearest\n\
+		if (backwardSearchResult == -1)\n\
+		    matchStart = forwardSearchResult\n\
+		else if (forwardSearchResult == -1)\n\
+		    matchStart = backwardSearchResult\n\
+		else {\n\
+		    if (keyStart - backwardSearchResult <= forwardSearchResult - keyEnd)\n\
+		    	matchStart = backwardSearchResult\n\
+		    else\n\
+		    	matchStart = forwardSearchResult\n\
+		}\n\
+		\n\
+		# find the complete word\n\
+		matchEnd = search_string(scanString, ">", matchStart, "regex")\n\
+		completedWord = substring(scanString, matchStart, matchEnd)\n\
+		\n\
+		# replace it in the window\n\
+		replace_range(startScan + keyStart, $cursor, completedWord)\n\
+	}\n\
+	Detab:Ctrl+Space::R: {\n\
+		redetab_selection("detab")\n\
+	}\n\
+	Delete Line:Ctrl+K::: {\n\
+		beginning_of_line()\n\
+		a=$cursor\n\
+		end_of_line()\n\
+		forward_character()\n\
+		replace_range(a,$cursor,"")\n\
+	}\n\
+	Fill Sel. w/Char:::R: {\n\
+		if ($selection_start == -1) {\n\
+		    beep()\n\
+		    return\n\
+		}\n\
+		\n\
+		# Ask the user what character to fill with\n\
+		fillChar = string_dialog("Fill selection with what character?", "OK", "Cancel")\n\
+		if ($string_dialog_button == 2)\n\
+		    return\n\
+		\n\
+		# Count the number of lines in the selection\n\
+		nLines = 0\n\
+		for (i=$selection_start; i<$selection_end; i++)\n\
+		    if (get_character(i) == "\\n")\n\
+		    	nLines++\n\
+		\n\
+		# Create the fill text\n\
+		rectangular = $selection_left != -1\n\
+		line = ""\n\
+		fillText = ""\n\
+		if (rectangular) {\n\
+		    for (i=0; i<$selection_right-$selection_left; i++)\n\
+			line = line fillChar\n\
+		    for (i=0; i<nLines; i++)\n\
+			fillText = fillText line "\\n"\n\
+		    fillText = fillText line\n\
+		} else {\n\
+		    if (nLines == 0) {\n\
+		    	for (i=$selection_start; i<$selection_end; i++)\n\
+		    	    fillText = fillText fillChar\n\
+		    } else {\n\
+		    	startIndent = 0\n\
+		    	for (i=$selection_start-1; i>=0 && get_character(i)!="\\n"; i--)\n\
+		    	    startIndent++\n\
+		    	for (i=0; i<$wrap_margin-startIndent; i++)\n\
+		    	    fillText = fillText fillChar\n\
+		    	fillText = fillText "\\n"\n\
+			for (i=0; i<$wrap_margin; i++)\n\
+			    line = line fillChar\n\
+			for (i=0; i<nLines-1; i++)\n\
+			    fillText = fillText line "\\n"\n\
+			for (i=$selection_end-1; i>=$selection_start && get_character(i)!="\\n"; \\\n\
+			    	i--)\n\
+			    fillText = fillText fillChar\n\
+		    }\n\
+		}\n\
+		\n\
+		# Replace the selection with the fill text\n\
+		replace_selection(fillText)\n\
+	}\n\
+	Quote Mail Reply:::: {\n\
+		if ($selection_start == -1)\n\
+		    replace_all("^.*$", "\\\\> &", "regex")\n\
+		else\n\
+		    replace_in_selection("^.*$", "\\\\> &", "regex")\n\
+	}\n\
+	Unquote Mail Reply:::: {\n\
+		if ($selection_start == -1)\n\
+		    replace_all("(^\\\\> )(.*)$", "\\\\2", "regex")\n\
+		else\n\
+		    replace_in_selection("(^\\\\> )(.*)$", "\\\\2", "regex")\n\
+	}\n\
+	C Comments>Comment Out Sel.@C@C++:::R: {\n\
+		selStart = $selection_start\n\
+		selEnd = $selection_end\n\
+		replace_range(selStart, selEnd, "/* " get_selection() " */")\n\
+		select(selStart, selEnd + 6)\n\
+	}\n\
+	C Comments>C Uncomment Sel.@C@C++:::R: {\n\
+		sel = get_selection()\n\
+		selStart = $selection_start\n\
+		selEnd = $selection_end\n\
+		commentStart = search_string(sel, "/*", 0)\n\
+		if (substring(sel, commentStart+2, commentStart+3) == " ")\n\
+		    keepStart = commentStart + 3\n\
+		else\n\
+		    keepStart = commentStart + 2\n\
+		keepEnd = search_string(sel, "*/", length(sel), "backward")\n\
+		commentEnd = keepEnd + 2\n\
+		if (substring(sel, keepEnd - 1, keepEnd) == " ")\n\
+		    keepEnd = keepEnd - 1\n\
+		replace_range(selStart + commentStart, selStart + commentEnd, \\\n\
+			substring(sel, keepStart, keepEnd))\n\
+		select(selStart, selEnd - (keepStart-commentStart) - \\\n\
+			(commentEnd - keepEnd))\n\
+	}\n\
+	C Comments>+ C++ Comment@C++:::R: {\n\
+		replace_in_selection("^.*$", "// &", "regex")\n\
+	}\n\
+	Fortran Comments>+ Fortran Comment@Fortran:Ctrl+Numbersign::R: {\n\
+		replace_in_selection("^.*$", "c &", "regex")\n\
+	}\n\
+	IDL Comments>+ IDL Comment@IDL:Ctrl+Numbersign::R: {\n\
+		replace_in_selection("^.*$", "; &", "regex")\n\
+	}\n\
+	Csh Comments>+ Csh Comment@Csh:Ctrl+Numbersign::R: {\n\
+		replace_in_selection("^.*$", "# &", "regex")\n\
+	}\n\
+	Python Comments>+ Python Comment@Python:Ctrl+Numbersign::R: {\n\
+		replace_in_selection("^.*$", "# &", "regex")\n\
+	}\n\
+	Perl Comments>+ Perl Comment@Perl:Ctrl+Numbersign::R: {\n\
+		replace_in_selection("^.*$", "# &", "regex")\n\
+	}\n\
+	Makefile Comments>+ Makefile Comment@Makefile:Ctrl+Numbersign::R: {\n\
+		replace_in_selection("^.*$", "# &", "regex")\n\
+	}\n\
+	Text Comments>+ Text Comment@Text:Ctrl+Numbersign::R: {\n\
+		replace_in_selection("^.*$", "# &", "regex")\n\
+	}\n\
+	Fortran Shift> Fortran Shift Left@Fortran:Shift+Ctrl+Period::R: {\n\
+		start=$selection_start\n\
+		end=$selection_end\n\
+		deselect-all()\n\
+		i=start\n\
+		while(get_character(i)!= "\\n")\n\
+		   i--\n\
+		while(i<end-1) {\n\
+		   a=get_character(++i)\n\
+		   if (a!="c" && a!="C" && a!="\\n") {\n\
+		      l=0\n\
+		      while(get_character(i+l)!="\\n" && l<6)\n\
+		         l++\n\
+		      i=i+l\n\
+		      if (l>5) {\n\
+		         if (get_character(i)==" "){\n\
+		            set_cursor_pos(i)\n\
+		            delete-next-character()\n\
+		            end=end-1\n\
+		         }\n\
+		      }\n\
+		   }\n\
+		   while(get_character(i)!="\\n")\n\
+		      i++\n\
+		}\n\
+		select(start,end)\n\
+		set_cursor_pos(end)\n\
+	}\n\
+	IDL Shift> IDL Shift Left@IDL:Shift+Ctrl+Period::R: {\n\
+		start=$selection_start\n\
+		end=$selection_end\n\
+		deselect-all()\n\
+		i=start\n\
+		while(get_character(i)!= "\\n")\n\
+		   i--\n\
+		while(i<end-1) {\n\
+		   a=get_character(++i)\n\
+		   if (a!=";" && a!="\\n") {\n\
+		      l=0\n\
+		      while(get_character(i+l)!="\\n")\n\
+		         l++\n\
+		      i=i+l\n\
+		      if (l>0) {\n\
+		         if (get_character(i)==" "){\n\
+		            set_cursor_pos(i)\n\
+		            delete-next-character()\n\
+		            end=end-1\n\
+		         }\n\
+		      }\n\
+		   }\n\
+		   while(get_character(i)!="\\n")\n\
+		      i++\n\
+		}\n\
+		select(start,end)\n\
+		set_cursor_pos(end)\n\
+	}\n\
+	Fortran Shift> Fortran Shift Right@Fortran:Ctrl+Period::R: {\n\
+		start=$selection_start\n\
+		end=$selection_end\n\
+		deselect-all()\n\
+		i=start\n\
+		while(get_character(i)!= "\\n")\n\
+		   i--\n\
+		while(i<end-1) {\n\
+		   a=get_character(++i)\n\
+		   if (a!="c" && a!="C" && a!="\\n") {\n\
+		      l=0\n\
+		      while(get_character(i+l)!="\\n" && l<6)\n\
+		         l++\n\
+		      i=i+l\n\
+		      if (l>5) {\n\
+		         set_cursor_pos(i)\n\
+		         insert_string(" ")\n\
+		         end+=1\n\
+		      }\n\
+		   }\n\
+		   while(get_character(i)!="\\n")\n\
+		      i++\n\
+		}\n\
+		select(start,end)\n\
+		set_cursor_pos(end)\n\
+	}\n\
+	IDL Shift> IDL Shift Right@IDL:Ctrl+Period::R: {\n\
+		start=$selection_start\n\
+		end=$selection_end\n\
+		deselect-all()\n\
+		i=start\n\
+		while(get_character(i)!= "\\n")\n\
+		   i--\n\
+		while(i<end-1) {\n\
+		   a=get_character(++i)\n\
+		   if (a!="c" && a!="\\n") {\n\
+		      l=0\n\
+		      while(get_character(i+l)!="\\n")\n\
+		         l++\n\
+		      i=i+l\n\
+		      if (l>0) {\n\
+		         set_cursor_pos(i)\n\
+		         insert_string(" ")\n\
+		         end+=1\n\
+		      }\n\
+		   }\n\
+		   while(get_character(i)!="\\n")\n\
+		      i++\n\
+		}\n\
+		select(start,end)\n\
+		set_cursor_pos(end)\n\
+	}\n\
+	Fortran Indent2>+ Fortran Indent2@Fortran:Ctrl+2::R: {\n\
+		replace_in_selection("^.*$", "  &", "regex")\n\
+	}\n\
+	LaTeX Comments>+ LaTeX Comment@LaTeX:Ctrl+Numbersign::R: {\n\
+		replace_in_selection("^.*$", "% &", "regex")\n\
+	}\n\
+	C Comments>- C++ Comment@C++:::R: {\n\
+		replace_in_selection("(^[ \\\\t]*// ?)(.*)$", "\\\\2", "regex")\n\
+	}\n\
+	IDL Comments>- IDL Comment@IDL:Shift+Ctrl+Numbersign::R: {\n\
+		replace_in_selection("(^[ \\\\t]*; ?)(.*)$", "\\\\2", "regex")\n\
+	}\n\
+	Csh Comments>- Csh Comment@Csh:Shift+Ctrl+Numbersign::R: {\n\
+		replace_in_selection("(^[ \\\\t]*# ?)(.*)$", "\\\\2", "regex")\n\
+	}\n\
+	Python Comments>- Python Comment@Python:Shift+Ctrl+Numbersign::R: {\n\
+		replace_in_selection("(^[ \\\\t]*# ?)(.*)$", "\\\\2", "regex")\n\
+	}\n\
+	Perl Comments>- Perl Comment@Perl:Shift+Ctrl+Numbersign::R: {\n\
+		replace_in_selection("(^[ \\\\t]*# ?)(.*)$", "\\\\2", "regex")\n\
+	}\n\
+	Makefile Comments>- Makefile Comment@Makefile:Shift+Ctrl+Numbersign::R: {\n\
+		replace_in_selection("(^[ \\\\t]*# ?)(.*)$", "\\\\2", "regex")\n\
+	}\n\
+	Fortran Comments>- Fortran Comment@Fortran:Shift+Ctrl+Numbersign::R: {\n\
+		replace_in_selection("(^[ \\\\t]*c ?)(.*)$", "\\\\2", "regex")\n\
+	}\n\
+	Text Comments>- Text Comment@Text:Shift+Ctrl+Numbersign::R: {\n\
+		replace_in_selection("(^[ \\\\t]*# ?)(.*)$", "\\\\2", "regex")\n\
+	}\n\
+	Fortran Indent2>- Fortran Indent2@Fortran:Shift+Ctrl+2::R: {\n\
+		replace_in_selection("(^[ \\\\t]*?)(.*)$", "\\\\2", "regex")\n\
+	}\n\
+	LaTeX Comments>- LaTeX Comment@LaTeX:Shift+Ctrl+Numbersign::R: {\n\
+		replace_in_selection("(^[ \\\\t]*% ?)(.*)$", "\\\\2", "regex")\n\
+	}\n\
+	C Comments>+ C Bar Comment 1@C:::R: {\n\
+		if ($selection_left != -1) {\n\
+		    dialog("Selection must not be rectangular")\n\
+		    return\n\
+		}\n\
+		start = $selection_start\n\
+		end = $selection_end-1\n\
+		origText = get_range($selection_start, $selection_end-1)\n\
+		newText = "/*\\n" replace_in_string(get_range(start, end), \\\n\
+			"^", " * ", "regex") "\\n */\\n"\n\
+		replace_selection(newText)\n\
+		select(start, start + length(newText))\n\
+	}\n\
+	C Comments>- C Bar Comment 1@C:::R: {\n\
+		selStart = $selection_start\n\
+		selEnd = $selection_end\n\
+		newText = get_range(selStart+3, selEnd-4)\n\
+		newText = replace_in_string(newText, "^ \\\\* ", "", "regex")\n\
+		replace_range(selStart, selEnd, newText)\n\
+		select(selStart, selStart + length(newText))\n\
+	}\n\
+	Make C Prototypes@C@C++:::: {\n\
+		if ($selection_start == -1) {\n\
+		    start = 0\n\
+		    end = $text_length\n\
+		} else {\n\
+		    start = $selection_start\n\
+		    end = $selection_end\n\
+		}\n\
+		string = get_range(start, end)\n\
+		nDefs = 0\n\
+		searchPos = 0\n\
+		prototypes = ""\n\
+		staticPrototypes = ""\n\
+		for (;;) {\n\
+		    headerStart = search_string(string, \\\n\
+			    "^[a-zA-Z]([^;#\\"'{}=><!/]|\\n)*\\\\)[ \\t]*\\n?[ \\t]*{", \\\n\
+			    searchPos, "regex")\n\
+		    if (headerStart == -1)\n\
+			break\n\
+		    headerEnd = search_string(string, ")", $search_end,"backward") + 1\n\
+		    prototype = substring(string, headerStart, headerEnd) ";\\n"\n\
+		    if (substring(string, headerStart, headerStart+6) == "static")\n\
+			staticPrototypes = staticPrototypes prototype\n\
+		    else\n\
+		    			prototypes = prototypes prototype\n\
+		    searchPos = headerEnd\n\
+		    nDefs++\n\
+		}\n\
+		if (nDefs == 0) {\n\
+		    dialog("No function declarations found")\n\
+		    return\n\
+		}\n\
+		new()\n\
+		focus_window("last")\n\
+		replace_range(0, 0, prototypes staticPrototypes)\n\
+	}\n
+nedit.bgMenuCommands: \
+	Undo:::: {\n\
+		undo()\n\
+	}\n\
+	Redo:::: {\n\
+		redo()\n\
+	}\n\
+	Cut:::R: {\n\
+		cut_clipboard()\n\
+	}\n\
+	Copy:::R: {\n\
+		copy_clipboard()\n\
+	}\n\
+	Paste:::: {\n\
+		paste_clipboard()\n\
+	}\n
+nedit.highlightPatterns: C:2:0{\n\
+		comment:"/\\*":"\\*/"::Comment::\n\
+		comment2:"//":"$"::Comment::\n\
+		string:"""":"""":"\\n":String::\n\
+		preprocessor line:"^[ \\t]*#":"$"::Preprocessor::\n\
+		string escape chars:"\\\\(.|\\n)":::String1:string:\n\
+		preprocessor esc chars:"\\\\(.|\\n)":::Preprocessor1:preprocessor line:\n\
+		preprocessor comment:"/\\*":"\\*/"::Comment:preprocessor line:\n\
+		character constant:"'":"'":"[^\\\\][^']":Character Const::\n\
+		numeric constant:"<((0(x|X)[\\da-fA-F]*)|((\\d+\\.?\\d*)|(\\.\\d+))((e|E)(\\+|-)?\\d+)?)(L|l|UL|ul|u|U|F|f)?>":::Numeric Const::D\n\
+		storage keyword:"<(const|extern|auto|register|static|unsigned|signed|volatile|char|double|float|int|long|short|void|typedef|struct|union|enum)>":::Storage Type::D\n\
+		keyword:"<(return|goto|if|else|case|default|switch|break|continue|while|do|for|sizeof)>":::Keyword::D\n\
+		braces:"[{}]":::Keyword::D\n\
+	}\n\
+	C++:Default\n\
+	Java:Default\n\
+	JavaScript:Default\n\
+	Ada:Default\n\
+	Fortran:2:0{\n\
+		Comment:"^[Cc*!]":"$"::Comment::\n\
+		Bang Comment:"!":"$"::Comment::\n\
+		Debug Line:"^D":"$"::Preprocessor::\n\
+		String:"'":"'":"\\n([^ \\t]| [^ \\t]|  [^ \\t]|   [^ \\t]|    [^ \\t]|     [ \\t0]| *\\t[^1-9])":String::\n\
+		Keywords:"<(ACCEPT|[Aa]ccept|AUTOMATIC|[Aa]utomatic|BACKSPACE|[Bb]ackspace|BLOCK|[Bb]lock|CALL|[Cc]all|CLOSE|[Cc]lose|COMMON|[Cc]ommon|CONTINUE|[Cc]ontinue|DATA|[Dd]ata|DECODE|[Dd]ecode|DELETE|[Dd]elete|DIMENSION|[Dd]imension|DO|[Dd]o|ELSE|[Ee]lse|ELSEIF|[Ee]lseif|ENCODE|[Ee]ncode|END ?FILE|[Ee]nd *file|ENDIF|[Ee]ndif|END|[Ee]nd|ENDDO|[Ee]nddo|ENTRY|[Ee]ntry|EQUIVALENCE|[Ee]quivalence|EXIT|[Ee]xit|EXTERNAL|[Ee]xternal|FORMAT|[Ff]ormat|FUNCTION|[Ff]unction|GO *TO|[Gg]o *to|IF|[Ii]f|IMPLICIT|[Ii]mplicit|INCLUDE|[Ii]nclude|INQUIRE|[Ii]nquire|INTRINSIC|[Ii]ntrinsic|LOGICAL|[Ll]ogical|NONE|[Nn]one|ON|[Oo]n|OPEN|[Oo]pen|PARAMETER|[Pp]arameter|PAUSE|[Pp]ause|POINTER|[Pp]ointer|PRINT|[Pp]rint|PROGRAM|[Pp]rogram|READ|[Rr]ead|RECORD|[Rr]ecord|RETURN|[Rr]eturn|REWIND|[Rr]ewind|SAVE|[Ss]ave|STATIC|[Ss]tatic|STOP|[Ss]top|STRUCTURE|[Ss]tructure|SUBROUTINE|[Ss]ubroutine|SYSTEM|[Ss]ystem|THEN|[Tt]hen|TYPE|[Tt]ype|UNION|[Uu]nion|UNLOCK|[Uu]nlock|VIRTUAL|[Vv]irtual|VOLATILE|[Vv]olatile|WHILE|[Ww]hile|WRITE|[Ww]rite)>":::Keyword::D\n\
+		Data Types:"<(BYTE|[Bb]yte|CHARACTER|[Cc]haracter|COMPLEX|[Cc]omplex|DOUBLE *COMPLEX|[Dd]ouble *[Cc]omplex|DOUBLE *PRECISION|[Dd]ouble *[Pp]recision|DOUBLE|[Dd]ouble|INTEGER|[Ii]nteger|REAL|[Rr]eal)(\\*\\d+)?>":::Keyword::D\n\
+		F90 Keywords:"<(ALLOCATABLE|[Aa]llocatable|ALLOCATE|[Aa]llocate|CASE|[Cc]ase|CASE|[Cc]ase|CYCLE|[Cc]ycle|DEALLOCATE|[Dd]eallocate|ELSEWHERE|[Ee]lsewhere|NAMELIST|[Nn]amelist|REWRITE|[Rr]ewrite|SELECT|[Ss]elect|WHERE|[Ww]here)>":::Keyword::D\n\
+		Continuation:"^(     [^ \\t0]|( |  |   |    )?\\t[1-9])":::Flag::\n\
+		Continuation in String:"\\n(     [^ \\t0]|( |  |   |    )?\\t[1-9])":::Flag:String:\n\
+	}\n\
+	Pascal:Default\n\
+	Yacc:Default\n\
+	Perl:Default\n\
+	Python:Default\n\
+	Awk:Default\n\
+	Tcl:Default\n\
+	Csh:Default\n\
+	Makefile:Default\n\
+	SGML HTML:Default\n\
+	LaTeX:Default\n\
+	PostScript:Default\n\
+	Lex:Default\n\
+	SQL:Default\n\
+	Matlab:Default\n\
+	VHDL:Default\n\
+	Verilog:Default\n\
+	NEdit Macro:Default\n\
+	IDL:1:0{\n\
+		Reserved Keywords:"<(?ia_correlate|abs|acos|adapt_hist_equal|alog|alog10|annotate|arg_present|array_equal|arrow|ascii_template|asin|assoc|atan|axis|bar_plot|beseli|beselj|beselk|besely|beta|bilinear|bin_date|binary_template|bindgen|binomial|blas_axpy|blk_con|box_cursor|breakpoint|broyden|bytarr|byte|byteorder|bytscl|c_correlate|caldat|calendar|call_external|call_function|call_method|call_procedure|catch|cd|cdf_attcreate|cdf_attdelete|cdf_attexists|cdf_attget|cdf_attinq|cdf_attnum|cdf_attput|cdf_attrename|cdf_close|cdf_compression|cdf_control|cdf_create|cdf_delete|cdf_doc|cdf_encode_epoch|cdf_epoch|cdf_error|cdf_exists|cdf_inquire|cdf_lib_info|cdf_open|cdf_parse_epoch|cdf_varcreate|cdf_vardelete|cdf_varget|cdf_varget1|cdf_varinq|cdf_varnum|cdf_varput|cdf_varrename|ceil|chebyshev|check_math|chisqr_cvf|chisqr_pdf|choldc|cholsol|cindgen|cir_3pnt|close|clust_wts|cluster|color_convert|color_quan|colormap_applicable|comfit|common|complex|complexarr|complexround|compute_mesh_normals|cond|congrid|conj|constrained_min|contour|convert_coord|convol|coord2to3|correlate|cos|cosh|cramer|create_struct|create_view|crossp|crvlength|ct_luminance|cti_test|cursor|curvefit|cv_coord|cvttobm|cw_animate|cw_animate_getp|cw_animate_load|cw_animate_run|cw_arcball|cw_bgroup|cw_clr_index|cw_colorsel|cw_defroi|cw_field|cw_filesel|cw_form|cw_fslider|cw_light_editor|cw_light_editor_get|cw_light_editor_set|cw_orient|cw_palette_editor|cw_palette_editor_get|cw_palette_editor_set|cw_pdmenu|cw_rgbslider|cw_tmpl|cw_zoom|dblarr|dcindgen|dcomplex|dcomplexarr|define_key|defroi|defsysv|delete_symbol|dellog|delvar|deriv|derivsig|determ|device|dfpmin|dialog_message|dialog_pickfile|dialog_printersetup|dialog_printjob|dialog_read_image|dialog_write_image|digital_filter|dilate|dindgen|dissolve|dist|dlm_load|do_apple_script|double|draw_roi|efont|eigenql|eigenvec|elmhes|empty|eof|eos_eh_convang|eos_eh_getversion|eos_eh_idinfo|eos_exists|eos_gd_attach|eos_gd_attrinfo|eos_gd_blksomoffset|eos_gd_close|eos_gd_compinfo|eos_gd_create|eos_gd_defboxregion|eos_gd_defcomp|eos_gd_defdim|eos_gd_deffield|eos_gd_deforigin|eos_gd_defpixreg|eos_gd_defproj|eos_gd_deftile|eos_gd_deftimeperiod|eos_gd_defvrtregion|eos_gd_detach|eos_gd_diminfo|eos_gd_dupregion|eos_gd_extractregion|eos_gd_fieldinfo|eos_gd_getfillvalue|eos_gd_getpixels|eos_gd_getpixvalues|eos_gd_gridinfo|eos_gd_inqattrs|eos_gd_inqdims|eos_gd_inqfields|eos_gd_inqgrid|eos_gd_interpolate|eos_gd_nentries|eos_gd_open|eos_gd_origininfo|eos_gd_pixreginfo|eos_gd_projinfo|eos_gd_query|eos_gd_readattr|eos_gd_readfield|eos_gd_readtile|eos_gd_regioninfo|eos_gd_setfillvalue|eos_gd_settilecache|eos_gd_tileinfo|eos_gd_writeattr|eos_gd_writefield|eos_gd_writefieldmeta|eos_gd_writetile|eos_pt_attach|eos_pt_attrinfo|eos_pt_bcklinkinfo|eos_pt_close|eos_pt_create|eos_pt_defboxregion|eos_pt_deflevel|eos_pt_deflinkage|eos_pt_deftimeperiod|eos_pt_defvrtregion|eos_pt_detach|eos_pt_extractperiod|eos_pt_extractregion|eos_pt_fwdlinkinfo|eos_pt_getlevelname|eos_pt_getrecnums|eos_pt_inqattrs|eos_pt_inqpoint|eos_pt_levelindx|eos_pt_levelinfo|eos_pt_nfields|eos_pt_nlevels|eos_pt_nrecs|eos_pt_open|eos_pt_periodinfo|eos_pt_periodrecs|eos_pt_query|eos_pt_readattr|eos_pt_readlevel|eos_pt_regioninfo|eos_pt_regionrecs|eos_pt_sizeof|eos_pt_updatelevel|eos_pt_writeattr|eos_pt_writelevel|eos_query|eos_sw_attach|eos_sw_attrinfo|eos_sw_close|eos_sw_compinfo|eos_sw_create|eos_sw_defboxregion|eos_sw_defcomp|eos_sw_defdatafield|eos_sw_defdim|eos_sw_defdimmap|eos_sw_defgeofield|eos_sw_defidxmap|eos_sw_deftimeperiod|eos_sw_defvrtregion|eos_sw_detach|eos_sw_diminfo|eos_sw_dupregion|eos_sw_extractperiod|eos_sw_extractregion|eos_sw_fieldinfo|eos_sw_getfillvalue|eos_sw_idxmapinfo|eos_sw_inqattrs|eos_sw_inqdatafields|eos_sw_inqdims|eos_sw_inqgeofields|eos_sw_inqidxmaps|eos_sw_inqmaps|eos_sw_inqswath|eos_sw_mapinfo|eos_sw_nentries|eos_sw_open|eos_sw_periodinfo|eos_sw_query|eos_sw_readattr|eos_sw_readfield|eos_sw_regioninfo|eos_sw_setfillvalue|eos_sw_writeattr|eos_sw_writedatameta|eos_sw_writefield|eos_sw_writegeometa|erase|erode|errorf|errplot|execute|exit|exp|expand|expand_path|expint|extrac|extract_slice|f_cvf|f_pdf|factorial|fft|file_chmod|file_delete|file_expand_path|file_mkdir|file_test|file_which|filepath|findfile|findgen|finite|fix|flick|float|floor|flow3|fltarr|flush|format_axis_values|free_lun|fstat|fulstr|funct|fv_test|fx_root|fz_roots|gamma|gamma_ct|gauss2dfit|gauss_cvf|gauss_pdf|gaussfit|gaussint|get_drive_list|get_kbrd|get_lun|get_screen_size|get_symbol|getenv|grid3|grid_tps|gs_iter|h_eq_ct|h_eq_int|hanning|hdf_an_annlen|hdf_an_annlist|hdf_an_atype2tag|hdf_an_create|hdf_an_createf|hdf_an_end|hdf_an_endaccess|hdf_an_fileinfo|hdf_an_get_tagref|hdf_an_id2tagref|hdf_an_numann|hdf_an_readann|hdf_an_select|hdf_an_start|hdf_an_tag2atype|hdf_an_tagref2id|hdf_an_writeann|hdf_browser|hdf_close|hdf_deldd|hdf_df24_addimage|hdf_df24_getimage|hdf_df24_getinfo|hdf_df24_lastref|hdf_df24_nimages|hdf_df24_readref|hdf_df24_restart|hdf_dfan_addfds|hdf_dfan_addfid|hdf_dfan_getdesc|hdf_dfan_getfds|hdf_dfan_getfid|hdf_dfan_getlabel|hdf_dfan_lablist|hdf_dfan_lastref|hdf_dfan_putdesc|hdf_dfan_putlabel|hdf_dfp_addpal|hdf_dfp_getpal|hdf_dfp_lastref|hdf_dfp_npals|hdf_dfp_putpal|hdf_dfp_readref|hdf_dfp_restart|hdf_dfp_writeref|hdf_dfr8_addimage|hdf_dfr8_getimage|hdf_dfr8_getinfo|hdf_dfr8_lastref|hdf_dfr8_nimages|hdf_dfr8_putimage|hdf_dfr8_readref|hdf_dfr8_restart|hdf_dfr8_setpalette|hdf_dupdd|hdf_exists|hdf_gr_attrinfo|hdf_gr_create|hdf_gr_end|hdf_gr_endaccess|hdf_gr_fileinfo|hdf_gr_findattr|hdf_gr_getattr|hdf_gr_getchunkinfo|hdf_gr_getiminfo|hdf_gr_getlutid|hdf_gr_getlutinfo|hdf_gr_idtoref|hdf_gr_luttoref|hdf_gr_nametoindex|hdf_gr_readimage|hdf_gr_readlut|hdf_gr_reftoindex|hdf_gr_select|hdf_gr_setattr|hdf_gr_setchunk|hdf_gr_setchunkcache|hdf_gr_setcompress|hdf_gr_setexternalfile|hdf_gr_start|hdf_gr_writeimage|hdf_gr_writelut|hdf_hdf2idltype|hdf_idl2hdftype|hdf_ishdf|hdf_lib_info|hdf_newref|hdf_number|hdf_open|hdf_packdata|hdf_read|hdf_sd_adddata|hdf_sd_attrfind|hdf_sd_attrinfo|hdf_sd_attrset|hdf_sd_create|hdf_sd_dimget|hdf_sd_dimgetid|hdf_sd_dimset|hdf_sd_end|hdf_sd_endaccess|hdf_sd_fileinfo|hdf_sd_getdata|hdf_sd_getinfo|hdf_sd_idtoref|hdf_sd_iscoordvar|hdf_sd_nametoindex|hdf_sd_reftoindex|hdf_sd_select|hdf_sd_setcompress|hdf_sd_setextfile|hdf_sd_setinfo|hdf_sd_start|hdf_unpackdata|hdf_vd_attach|hdf_vd_detach|hdf_vd_fdefine|hdf_vd_fexist|hdf_vd_find|hdf_vd_get|hdf_vd_getid|hdf_vd_getinfo|hdf_vd_getnext|hdf_vd_insert|hdf_vd_isvd|hdf_vd_isvg|hdf_vd_lone|hdf_vd_read|hdf_vd_seek|hdf_vd_setinfo|hdf_vd_write|hdf_vg_addtr|hdf_vg_attach|hdf_vg_detach|hdf_vg_getid|hdf_vg_getinfo|hdf_vg_getnext|hdf_vg_gettr|hdf_vg_gettrs|hdf_vg_inqtr|hdf_vg_insert|hdf_vg_isvd|hdf_vg_isvg|hdf_vg_lone|hdf_vg_number|hdf_vg_setinfo|heap_gc|hilbert|hist_2d|hist_equal|histogram|hls|hough|hqr|hsv|ibeta|identity|idl_container|idlanroi|idlanroigroup|idlffdicom|idlffdxf|idlfflanguagecat|idlffshape|idlgraxis|idlgrbuffer|idlgrclipboard|idlgrcolorbar|idlgrcontour|idlgrfont|idlgrimage|idlgrlegend|idlgrlight|idlgrmodel|idlgrmpeg|idlgrpalette|idlgrpattern|idlgrplot|idlgrpolygon|idlgrpolyline|idlgrprinter|idlgrroi|idlgrroigroup|idlgrscene|idlgrsurface|idlgrsymbol|idlgrtessellator|idlgrtext|idlgrview|idlgrviewgroup|idlgrvolume|idlgrvrml|idlgrwindow|igamma|image_cont|image_statistics|imaginary|indgen|int_2d|int_3d|int_tabulated|intarr|interpol|interpolate|invert|ioctl|ishft|isocontour|isosurface|julday|keyword_set|krig2d|kurtosis|kw_test|l64indgen|label_date|label_region|ladfit|laguerre|leefilt|legendre|linbcg|lindgen|linfit|linkimage|live_contour|live_control|live_destroy|live_export|live_image|live_info|live_line|live_load|live_oplot|live_plot|live_print|live_rect|live_style|live_surface|live_text|ljlct|ll_arc_distance|lmfit|lmgr|lngamma|lnp_test|loadct|locale_get|lon64arr|lonarr|long|long64|lsode|lu_complex|ludc|lumprove|lusol|m_correlate|machar|make_array|make_dll|map_2points|map_continents|map_grid|map_image|map_patch|map_proj_info|map_set|matrix_multiply|max|md_test|mean|meanabsdev|median|mesh_clip|mesh_decimate|mesh_issolid|mesh_merge|mesh_numtriangles|mesh_obj|mesh_smooth|mesh_surfacearea|mesh_validate|mesh_volume|message|min|min_curve_surf|modifyct|moment|morph_close|morph_distance|morph_gradient|morph_hitormiss|morph_open|morph_thin|morph_tophat|mpeg_close|mpeg_open|mpeg_put|mpeg_save|msg_cat_close|msg_cat_compile|msg_cat_open|multi|n_elements|n_params|n_tags|ncdf_attcopy|ncdf_attdel|ncdf_attget|ncdf_attinq|ncdf_attname|ncdf_attput|ncdf_attrename|ncdf_close|ncdf_control|ncdf_create|ncdf_dimdef|ncdf_dimid|ncdf_diminq|ncdf_dimrename|ncdf_exists|ncdf_inquire|ncdf_open|ncdf_vardef|ncdf_varget|ncdf_varget1|ncdf_varid|ncdf_varinq|ncdf_varput|ncdf_varrename|newton|norm|obj_class|obj_destroy|obj_isa|obj_new|obj_valid|objarr|on_error|on_ioerror|open|openr|openw|oplot|oploterr|p_correlate|particle_trace|pcomp|plot|plot_3dbox|plot_field|ploterr|plots|pnt_line|point_lun|polar_contour|polar_surface|poly|poly_2d|poly_area|poly_fit|polyfill|polyfillv|polyshade|polywarp|popd|powell|primes|print|printd|printf|profile|profiles|project_vol|ps_show_fonts|psafm|pseudo|ptr_free|ptr_new|ptr_valid|ptrarr|pushd|qromb|qromo|qsimp|query_bmp|query_dicom|query_image|query_jpeg|query_pict|query_png|query_ppm|query_srf|query_tiff|query_wav|r_correlate|r_test|radon|randomn|randomu|ranks|rdpix|read|read_ascii|read_binary|read_bmp|read_dicom|read_image|read_interfile|read_jpeg|read_pict|read_png|read_ppm|read_spr|read_srf|read_sylk|read_tiff|read_wav|read_wave|read_x11_bitmap|read_xwd|readf|reads|readu|rebin|recall_commands|recon3|reduce_colors|reform|regress|replicate|replicate_inplace|resolve_all|resolve_routine|reverse|rewind|rk4|roberts|rot|rotate|round|routine_info|rs_test|s_test|savgol|scale3|scale3d|search2d|search3d|set_plot|set_shading|set_symbol|setenv|setlog|setup_keys|sfit|shade_surf|shade_surf_irr|shade_volume|shift|show3|showfont|sin|sindgen|sinh|size|skewness|skipf|slicer3|slide_image|smooth|sobel|socket|sort|spawn|sph_4pnt|sph_scat|spher_harm|spl_init|spl_interp|spline|spline_p|sprsab|sprsax|sprsin|sprstp|sqrt|standardize|stddev|stop|strarr|strcmp|strcompress|streamline|stregex|stretch|string|strjoin|strlen|strlowcase|strmatch|strmessage|strmid|strpos|strput|strsplit|strtrim|struct_assign|struct_hide|strupcase|surface|surfr|svdc|svdfit|svsol|swap_endian|systime|t3d|t_cvf|t_pdf|tag_names|tan|tanh|taprd|tapwrt|tek_color|temporary|tetra_clip|tetra_surface|tetra_volume|thin|threed|timegen|tm_test|total|trace|trackball|transpose|tri_surf|triangulate|trigrid|triql|trired|trisol|trnlog|ts_coef|ts_diff|ts_fcast|ts_smooth|tv|tvcrs|tvlct|tvrd|tvscl|uindgen|uint|uintarr|ul64indgen|ulindgen|ulon64arr|ulonarr|ulong|ulong64|uniq|usersym|value_locate|variance|vax_float|vector_field|vel|velovect|vert_t3d|voigt|voronoi|voxel_proj|wait|warp_tri|watershed|wdelete|weof|wf_draw|where|widget_base|widget_button|widget_control|widget_draw|widget_droplist|widget_event|widget_info|widget_label|widget_list|widget_slider|widget_table|widget_text|window|write_bmp|write_image|write_jpeg|write_nrif|write_pict|write_png|write_ppm|write_spr|write_srf|write_sylk|write_tiff|write_wav|write_wave|writeu|wset|wshow|wtn|wv_applet|wv_cw_wavelet|wv_cwt|wv_denoise|wv_dwt|wv_fn_coiflet|wv_fn_daubechies|wv_fn_gaussian|wv_fn_haar|wv_fn_morlet|wv_fn_paul|wv_fn_symlet|wv_import_data|wv_import_wavelet|wv_plot3d_wps|wv_plot_multires|wv_pwt|wv_tool_denoise|xbm_edit|xdisplayfile|xdxf|xfont|xinteranimate|xloadct|xmanager|xmng_tmpl|xmtool|xobjview|xpalette|xpcolor|xplot3d|xregistered|xroi|xsq_test|xsurface|xvaredit|xvolume|xyouts|zoom|zoom_24)>":::Keyword::\n\
+		Graphics Keywords:"<(?ibackground|c_annotation|c_charsize|c_charthick|c_colors|c_labels|c_linestyle|c_orientation|c_spacing|c_thick|channel|charsize|[xyz]charsize|charthick|clip|color|data|device|encapsul|encapsulated|font|[xyz]gridstyle|linestyle|[xy]log|[xyz]margin|[xyz]minor|noclip|nodata|noerase|normal|orientation|position|psym|[xyz]range|[xyz]style|subtitle|symsize|t3d|thick|[xyz]thick|[xyz]tickformat|ticklen|[xyz]ticklen|[xyz]tickname|[xyz]ticks|[xyz]tickv|[xyz]tick_get|title|[xyz]title|zvalue|z)>":::Identifier::D\n\
+		Optional Keywords:"<(?ifile|format|glinestyle|glinethick|latalign|latdel|latlab|levels|limit|lonalign|londel|lonlab|max_value|min_value|mlinethick|nlevels|path_filename|path_info|path_xy|retain|triangulation|[xy]offset|[xy]size)>":::Identifier::D\n\
+		Optional Keywords2:"/(?iadvance|all|cell_fill|clip|close|closed|coasts|continents|countries|cylindrical|downhill|fill|follow|grid|hires|horizon|interp|irregular|iso|isotropic|label|landscape|noborder|nodata|noerase|norm|overplot|path_data_coords|path_double|portrait|remove_all|usa|[xyz]axis|[xyz]log|[xyz]style)>":::Optional Keyword::D\n\
+		Map Projections:"/(?iaitoff|albers|azimuthal|conic|cylindrical|gnomic|goodeshomolosine|hammer|lambert|mercator|miller_cylindrical|mollewide|orthographic|robinson|satellite|sinusoidal|stereographic|transverse_mercator)>":::Optional Keyword::D\n\
+		Graphics Devices:"<(?iCGM|HP|LJ|MAC|NULL|PCL|PRINTER|PS|REGIS|TEK|WIN|X|Z)>":::Identifier::D\n\
+		Routine:"<(?icompile_opt|forward_function|function|pro|end|retall|return)>":::Subroutine::\n\
+		Block:"<(?ibegin|endcase|endelse|endfor|endif|endrep|endwhile)>":::Subroutine1::D\n\
+		Flow Statements:"<(?ibreak|case|continue|do|else|for|goto|if|of|repeat|stop|switch|then|until|while)>":::Keyword::D\n\
+		Numeric Constant:"<((?i0x[\\da-f]+)|0[0-7]+|(\\d+\\.?\\d*|\\.\\d+)([eE][-+]?\\d+)?|[\\d_]+)>":::Numeric Const::D\n\
+		Constant System Vars:"!(?idpi|dtor|map|pi|radeg|values)>":::Flag::D\n\
+		Graphics System Vars:"!(?iorder|[dpxyz])>":"=":"\\n| ":Flag::D\n\
+		Environment System Vars:"!(?idir|edit_input|help_path|journal|more|path|prompt|quiet|version)>":::Flag::D\n\
+		Error Handling Vars:"!(?ierror_state|except|mouse|warn)>":::Flag::D\n\
+		String single:"'":"'":"\\n":String::\n\
+		String double:"""":"""":"\\n":String::\n\
+		Comment:";":"\\n"::Comment::\n\
+		Operators:"<(?i[+*/^-]|mod)>":::Operator::D\n\
+		logical:"<(?iand|not|or|xor|eq|ge|gt|le|lt|ne)>":::Ada Attributes::D\n\
+		Special Chars:"<[$&]>":::Flag::D\n\
+		Punctuation Characters:"[,:=]":::Flag::D\n\
+		Parens:"[()[\\]]":::Text Arg2::\n\
+	}\n\
+	Text:8:0{\n\
+		Comment:"#":"$"::Comment::\n\
+	}\n\
+	CSS:Default\n\
+	Regex:Default\n\
+	XML:Default
+nedit.languageModes: 	C:.c .h::::::".,/\\`'!|@#%^&*()-=+{}[]"":;<>?~":\n\
+	C++:.cc .hh .C .H .i .cpp::::::".,/\\`'!|@#%^&*()-=+{}[]"":;<>?~":\n\
+	Java:.java:::::::\n\
+	JavaScript:.js:::::::\n\
+	Ada:.ada .ad .ads .adb .a:::::::\n\
+	Fortran:.f .f77 .for .inc:::::::\n\
+	Pascal:.pas .p .int:::::::\n\
+	Yacc:.y::::::".,/\\`'!|@#%^&*()-=+{}[]"":;<>?~":\n\
+	Perl:.pl .pm .p5 .PL:"^[ \\t]*#[ \\t]*!.*perl":Auto:None:::".,/\\\\`'!$@#%^&*()-=+{}[]"":;<>?~|":\n\
+	Python:.py:"^#!.*python":Auto:None:::"!""#$%&'()*+,-./:;<=>?@[\\\\]^`{|}~":\n\
+	Tcl:.tcl .tk .itcl .itk::Smart:None::::\n\
+	Awk:.awk:::::::\n\
+	Csh:.csh .cshrc .login .logout '':"^[ \\t]*#[ \\t]*![ \\t]*/bin/csh"::::::\n\
+	Makefile:Makefile makefile:::::::\n\
+	SGML HTML:.sgml .sgm .html .htm:"\\<(?ihtml)\\>"::::::\n\
+	LaTeX:.tex .sty .bst .bib:::::::\n\
+	PostScript:.ps .PS .eps .EPS .epsf .epsi:::::::\n\
+	Lex:.lex:::::::\n\
+	SQL:.sql:::::::\n\
+	Matlab:..m .oct .sci:::::::\n\
+	VHDL:.vhd .vhdl .vdl:::::::\n\
+	Verilog:.v:::::::\n\
+	NEdit Macro:.nm /home/pjm43/.neditmacro:::::::\n\
+	IDL:.pro .PRO:"<(?i(pro))>":Auto:::4:",/\\\\`'!@#%^*()-=+{}[]"":;<>?":\n\
+	CSS:css::Auto:None:::".,/\\`'!|@#%^&*()=+{}[]"":;<>?~":\n\
+	Regex:.reg .regex:"\\(\\?[:#=!iInN].+\\)":None:Continuous::::\n\
+	XML:.xml .xsl .dtd:"\\<(?i\\?xml|!doctype)"::None:::"<>/=""'()+*?|":\n\
+	Text:.txt:::Newline::::
+nedit.styles: 	Plain:black:Plain\n\
+	Comment:mediumblue:Italic\n\
+	Keyword:darkviolet:Bold\n\
+	Storage Type:brown:Bold\n\
+	Storage Type1:saddle brown:Bold\n\
+	String:navyblue:Plain\n\
+	String1:SeaGreen:Plain\n\
+	String2:darkGreen:Bold\n\
+	Preprocessor:RoyalBlue4:Plain\n\
+	Preprocessor1:blue:Plain\n\
+	Character Const:purple:Plain\n\
+	Numeric Const:navyblue:Plain\n\
+	Identifier:brown:Plain\n\
+	Identifier1:RoyalBlue4:Plain\n\
+	Identifier2:SteelBlue:Plain\n\
+	Subroutine:purple:Plain\n\
+	Subroutine1:chocolate:Plain\n\
+	Ada Attributes:plum:Bold\n\
+	Label:red:Italic\n\
+	Flag:red:Bold\n\
+	Text Comment:SteelBlue4:Italic\n\
+	Text Key:VioletRed4:Bold\n\
+	Text Key1:VioletRed4:Plain\n\
+	Text Arg:RoyalBlue4:Bold\n\
+	Text Arg1:SteelBlue4:Bold\n\
+	Text Arg2:RoyalBlue4:Plain\n\
+	Text Escape:gray30:Bold\n\
+	LaTeX Math:darkGreen:Plain\n\
+	comment2:blue:Italic\n\
+	Pointer:#660000:Bold\n\
+	Regex:#009944:Bold\n\
+	Warning:brown2:Italic\n\
+	Optional Keyword:brown:Bold Italic\n\
+	Operator:red:Plain
+nedit.smartIndentInit: 	C:Default\n\
+	C++:Default\n\
+	Matlab:Default
+nedit.smartIndentInitCommon: Default
+nedit.autoWrap: Newline
+nedit.wrapMargin: 0
+nedit.autoIndent: Auto
+nedit.autoSave: True
+nedit.openInTab: True
+nedit.saveOldVersion: False
+nedit.showMatching: Delimiter
+nedit.matchSyntaxBased: True
+nedit.highlightSyntax: True
+nedit.backlightChars: True
+nedit.searchDialogs: False
+nedit.beepOnSearchWrap: False
+nedit.retainSearchDialogs: False
+nedit.searchWraps: True
+nedit.stickyCaseSenseButton: True
+nedit.repositionDialogs: True
+nedit.autoScroll: False
+nedit.appendLF: True
+nedit.sortOpenPrevMenu: True
+nedit.statisticsLine: True
+nedit.iSearchLine: False
+nedit.sortTabs: False
+nedit.tabBar: True
+nedit.tabBarHideOne: True
+nedit.toolTips: True
+nedit.globalTabNavigate: False
+nedit.lineNumbers: False
+nedit.pathInWindowsMenu: True
+nedit.warnFileMods: True
+nedit.warnRealFileMods: True
+nedit.warnExit: True
+nedit.searchMethod: Literal
+nedit.textRows: 32
+nedit.textCols: 78
+nedit.tabDistance: 4
+nedit.emulateTabs: 0
+nedit.insertTabs: False
+nedit.textFont: -adobe-courier-medium-r-normal--18-180-75-75-m-110-iso8859-1
+nedit.boldHighlightFont: -adobe-courier-bold-r-normal--18-180-75-75-m-110-iso8859-1
+nedit.italicHighlightFont: -adobe-courier-medium-o-normal--18-180-75-75-m-110-iso8859-1
+nedit.boldItalicHighlightFont: -adobe-courier-bold-o-normal--18-180-75-75-m-110-iso8859-1
+nedit.textFgColor: black
+nedit.textBgColor: rgb:e5/e5/e5
+nedit.selectFgColor: black
+nedit.selectBgColor: rgb:cc/cc/cc
+nedit.hiliteFgColor: white
+nedit.hiliteBgColor: red
+nedit.lineNoFgColor: black
+nedit.cursorFgColor: black
+nedit.smartTags: True
+nedit.prefFileRead: True
+nedit.titleFormat: {%c} [%s] %f (%S) - %d

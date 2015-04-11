@@ -1,0 +1,11 @@
+- .htaccess
+- *.o
+- *.exe
+- core.*
+- McAdam/**Makefile
+- McAdam/bin/linux/*
+- McAdam/lib/linux/*
+- lensent2/**Makefile
+- lensent2/.*
+- mongo
+- spacewarp_2*
