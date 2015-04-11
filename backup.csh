@@ -158,13 +158,9 @@ endif
 if ($#dirs == 0) then
   set dirs = (\
               work\
-              Mail\
-              OldMail\
               personal\
               public_html\
               csh\
-              images\
-              movies\
               outreach\
               perl\
               python\
@@ -195,7 +191,6 @@ endif
 
 set command = "rsync -rptgoDzu"
 set command = "$command --exclude-from=${HOME}/.rsync-exclude"
-set command = "$command --exclude-from=${HOME}/.rsync-exclude.dmusic"
 if ($delete) set command = "$command --delete"
 if ($vb) then
   set command = "$command -v"

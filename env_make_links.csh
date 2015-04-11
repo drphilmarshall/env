@@ -79,7 +79,7 @@ set SRCDIR = $HOME/cvs/env/src
 
 chdir $HOME
 
-set sources = `\ls $SRCDIR | grep -v CVS | \
+set sources = `\ls $SRCDIR | \
                  grep -v 'bookmarks.html' | \
                  grep -v 'prefs.js' | \
                  grep -v 'authorized_keys' | \
@@ -99,26 +99,6 @@ foreach source ( $sources )
   endif  
 end
       
-      
-# Now move mozilla setup files to correct directory:
-# BUG! This is wrong for apple, and fails if .mozilla does not exist...
-
-set here = `\ls -d ${HOME}/.mozilla/firefox/*.default | tail -1`
-chdir $here
-set mozillasources = ( bookmarks.html prefs.js )
-foreach source ( $mozillasources )
-  set remotefile = $SRCDIR/$source
-  set target = ${source:t}
-  echo "$target -> $remotefile"
-  
-  if ( -e $target && $klobber == 0 ) then
-    if ($vb) echo "  $target exists, skipping"
-  else
-    \rm -f $target
-    ln -s $remotefile $target
-    if ($vb) echo "  Made soft link $target"
-  endif  
-end
 
 # And finally do ssh keys and config:
 
