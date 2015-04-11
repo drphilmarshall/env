@@ -495,7 +495,7 @@ setenv PATH $KCORRECT_DIR/bin:$PATH
   
 # Homegrown commands get preference:
 setenv PATH ${HOME}/bin:${HOME}/csh:${HOME}/perl:${HOME}/python:${PATH}
-setenv PATH ${PATH}:${HOME}/cvs/env
+setenv PATH ${PATH}:${HOME}/env
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ----

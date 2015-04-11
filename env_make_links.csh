@@ -72,7 +72,7 @@ endif
 
 # Make links!
 
-set SRCDIR = $HOME/cvs/env/src
+set SRCDIR = $HOME/env/src
 
 
 # First do .* files in home directory:
