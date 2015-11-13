@@ -2,7 +2,7 @@
 # .login set-up file
 #   - runs after .cshrc - but my .cshrc sources .login first! Which makes more
 #     sense I think:
-#   - sets terminal and global environment characteristics, which are then 
+#   - sets terminal and global environment characteristics, which are then
 #     used by .cshrc
 #
 # 2005-06-19 PJM
@@ -15,7 +15,7 @@ setenv VB 0
 if ( $?COOKIE ) then
   if ($VB) echo ".login has already been run"
   goto FINISH
-endif  
+endif
 
 # NO beeps! Causes error in cron jobs though
 # xset b off
@@ -29,48 +29,48 @@ if (${OSTYPE} == 'darwin') then
   set linux = 0
   if ($HOST == nutella.physics.ucsb.edu) then
     setenv LOCATION MACUCSB
-#    setenv DISPLAY ":0.0"   
+#    setenv DISPLAY ":0.0"
   else if ($HOST == asosx106.physics.ox.ac.uk) then
     setenv LOCATION Oxford
   else
     setenv HOST charlie
     setenv LOCATION laptop
-    setenv DISPLAY ":0.0"   
+    setenv DISPLAY ":0.0"
 #     setenv HOME /Users/pjm
   endif
-                                                          
+
 else if (${OSTYPE} == 'linux') then
   set darwin = 0
   set linux = 1
-  set test = `echo $HOST | cut -c1-2` 
+  set test = `echo $HOST | cut -c1-2`
   if (${test} == ki || ${test} == no) then
     setenv LOCATION SLAC
-    setenv HOME /u/ki/pjm                                                          
+    setenv HOME /u/ki/pjm
   else if (${HOST} == phil-desktop) then
     setenv LOCATION KIPAC
-    setenv HOME /home/pjm                                                          
+    setenv HOME /home/pjm
   else if (${HOST} == aibn119) then
     setenv LOCATION Bonn
   else if (${HOST} == ardua.physics.ucsb.edu) then
     setenv LOCATION UCSB
-    setenv HOME /home/pjm                                                          
+    setenv HOME /home/pjm
   else if (${HOST} == lsstbook) then
     setenv LOCATION LSSTBOOK
-    setenv HOME /home/pjm                                                          
+    setenv HOME /home/pjm
   else if (${HOST} == harlie) then
     setenv LOCATION GMU
-    setenv HOME /home/pjm                                                          
+    setenv HOME /home/pjm
   else if (${HOST} == aida77) then
     setenv LOCATION MPIA
   else
     setenv LOCATION UCSB
-    setenv HOME /data1/homedirs/pjm                                                          
-  endif    
+    setenv HOME /data1/homedirs/pjm
+  endif
 else
   echo ".login: Unknown operating system ${OSTYPE}"
-  echo ".login: Using darwin setup, assuming laptop"  
+  echo ".login: Using darwin setup, assuming laptop"
   set darwin = 0
-  set linux = 1  
+  set linux = 1
   setenv LOCATION laptop
 endif
 
@@ -133,31 +133,22 @@ setenv PS1QLS_DIR $WORK_DIR/stronglensing/PanSTARRS/PS1QLS
 
 setenv EMCEE_DIR ${WORK_DIR}/bayesian/emcee
 
+setenv COSMOSIS_SRC_DIR $WORK_DIR/stronglensing/LSST/DESC/Cosmology/cosmosis
+
 # Shared software directories:
 
 if (${LOCATION} == SLAC) then
   setenv BACKUP_DIR /nfs/slac/g/ki/ki19/${USER}
   setenv NFS_DIR /nfs/slac/g/ki/ki19/pjm
   setenv VSA_ARCHIVE_DIR ${NFS_DIR}/VSA/imagearchive
-#   setenv GROUP_SOFT_DIR /afs/slac/g/ki/ki04/soft
+  # setenv GROUP_SOFT_DIR /afs/slac/g/ki/ki04/soft
   setenv GROUP_SOFT_DIR /afs/slac/g/ki/software
   setenv HAGGLES_DATA_DIR /nfs/slac/g/ki/haggles
   setenv MS0451_DATA_DIR $HAGGLES_DATA_DIR/hlsp/MS0451
   setenv USNOB_DIR /nfs/slac/g/ki/ki06/pjm/astrometry/usno/vb
   setenv MUSIC_DIR /nfs/slac/g/ki/ki04/marusa/muzika
-#  setenv PROD_DIR_PREFIX ${GROUP_SOFT_DIR}/idl/products
-#  setenv PRODUCTS $PROD_DIR_PREFIX/ups_db
-#  setenv EUPS_DIR $PROD_DIR_PREFIX/evilups
-
-else if (${LOCATION} == KIPAC) then
-# # 2010-01-20: Removing all afs dirs from path during SLAC power outage...
-#   setenv GROUP_SOFT_DIR ${HOME}/software
-#   setenv GROUP_SOFT_DIR /afs/slac/g/ki/ki04/soft
-  setenv GROUP_SOFT_DIR /afs/slac/g/ki/software
 
 else if (${LOCATION} == UCSB) then
-#   setenv HAGGLES_DATA_DIR ${WORK_DIR}/stronglensing/HSTarchive/haggles
-#   setenv HAGGLES_DATA_DIR /data1/HAGGLeS
   setenv HAGGLES_DATA_DIR /data4/pjm/HAGGLeS
   setenv MUSIC_DIR /home/pjm/music
 
@@ -171,15 +162,8 @@ else if (${LOCATION} == MPIA) then
   setenv PS1QLS_DATA_DIR /a77d1/PS1_QLS
 
 else if (${LOCATION} == laptop) then
-  setenv PROD_DIR_PREFIX ${HOME}/products
-  setenv PRODUCTS $PROD_DIR_PREFIX/ups_db
-  setenv EUPS_DIR $PROD_DIR_PREFIX/evilups
+  setenv LSST_HOME $HOME/lsst
 
-else if (${LOCATION} == Oxford) then
-  setenv PROD_DIR_PREFIX ${HOME}/products
-  setenv PRODUCTS $PROD_DIR_PREFIX/ups_db
-  setenv EUPS_DIR $PROD_DIR_PREFIX/evilups
-  
 endif
 
 #-------------------------------------------------------------------------------
@@ -188,15 +172,15 @@ endif
 # ********
 
 # # Packages are easy at Oxford - all done via the Activate system:
-# 
+#
 # if (${LOCATION} == Oxford) then
-# 
+#
 #   source /Local/bin/Setup.csh
-# 
+#
 # # These should be done by hand, not here:
 #   Activate scisoft
 #   Activate idl 71
-# 
+#
 # endif
 
 # Elsewhere they just exist already - just have to set environment variables:
@@ -291,7 +275,7 @@ setenv SWAP_DIR ${HOME}/public_html/SpaceWarps/Science/analysis
 # imcat:
 if ($darwin) then
   setenv IMCAT_DIR /usr/local/imcat
-else  
+else
   setenv IMCAT_DIR ${WORK_DIR}/weaklensing/imcat
 endif
 setenv IMCATDIR ${IMCAT_DIR}
@@ -336,7 +320,7 @@ else if (${LOCATION} == UCSB) then
   setenv KCORRECT_DIR /usr/local/kcorrect
 else if (${LOCATION} == laptop) then
   setenv KCORRECT_DIR /usr/local/kcorrect
-else 
+else
   setenv KCORRECT_DIR $WORK_DIR/idl/kcorrect
 endif
 
@@ -379,7 +363,7 @@ endif
 # Paths
 # *****
 
-# Initial path - this should be set by global .login or something, and is in 
+# Initial path - this should be set by global .login or something, and is in
 # some places (like MPIA):
 
 if ($VB) echo ".login: setting PATH..."
@@ -402,22 +386,22 @@ else if ($darwin) then
   if (${LOCATION} == laptop) then
 
     # Python 2.7.2:
-    # Python executable lives in /usr/local/bin...  
+    # Python executable lives in /usr/local/bin...
     setenv PATH  /usr/local/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/texbin
     # Packages managed by homebrew and pip:
     setenv PATH /usr/local/share/python:$PATH
 
     # # Python 2.6.1:
-    # # Python executable lives in /usr/local/bin...  
+    # # Python executable lives in /usr/local/bin...
     #     setenv PATH  /bin:/sbin:/usr/bin:/usr/local/bin:/usr/sbin:/usr/X11R6/bin:/usr/texbin
 
   else if (${LOCATION} == Oxford) then
 
-    # Oxford setup script, following path reset just to be sure:  
+    # Oxford setup script, following path reset just to be sure:
     unsetenv PATH
     setenv PATH /usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/Local/bin:/Local/sbin:/opt/local/bin:/opt/local/sbin:/usr/texbin:/usr/X11/bin
     source /Local/bin/Setup.csh
-  
+
   endif
 endif
 
@@ -462,7 +446,7 @@ if ($linux) then
   else
     setenv PATH ${PATH}:/usr/local/itt/idl70/bin
     setenv PATH ${PATH}:${IDLUTILS_DIR}/bin
-  endif  
+  endif
 else if ($darwin && ${LOCATION} != Oxford) then
   setenv PATH ${PATH}:/Applications/itt/idl/bin
 endif
@@ -475,7 +459,7 @@ setenv PATH ${PATH}:${SCRIPTUTILS_DIR}/bin
 setenv PATH ${PATH}:${SCRIPTUTILS_DIR}/bash
 setenv PATH ${PATH}:${SHAGGLES_DIR}/bin
 setenv PATH ${PATH}:${KLENS_DIR}/jred/csh
-setenv PATH ${PATH}:${GLAMROC_DIR}/bin 
+setenv PATH ${PATH}:${GLAMROC_DIR}/bin
 setenv PATH ${PATH}:${MEDIC_DIR}/bin
 setenv PATH ${PATH}:${STELLARPOP_DIR}
 
@@ -485,14 +469,15 @@ if (${LOCATION} == SLAC || ${LOCATION} == KIPAC) then
 endif
 
 if (${LOCATION} == SLAC || ${LOCATION} == KIPAC) then
-  setenv PATH ${PATH}:${GROUP_SOFT_DIR}/stsci_python/pyraf 
+  setenv PATH ${PATH}:${GROUP_SOFT_DIR}/stsci_python/pyraf
   setenv PATH ${PATH}:${HOME}/iraf
   setenv PATH ${PATH}:${IRAF_DIR}
   setenv PATH ${PATH}:${GROUP_SOFT_DIR}/stsci_python/multidrizzle
 endif
 
 setenv PATH $KCORRECT_DIR/bin:$PATH
-  
+
+
 # Homegrown commands get preference:
 setenv PATH ${HOME}/bin:${HOME}/csh:${HOME}/perl:${HOME}/python:${PATH}
 setenv PATH ${PATH}:${HOME}/env
@@ -551,7 +536,7 @@ else if ($darwin && ${LOCATION} == Oxford) then
   setenv TEXINPUTS "${TEXINPUTS}:/Library/TeX"
 endif
 setenv TEXINPUTS "${TEXINPUTS}:$LATEX_DIR/styles:$LATEX_DIR/styles/mnras:$LATEX_DIR/styles/aastex52:$LATEX_DIR/styles/lineno:$LATEX_DIR/styles/revnum:$LATEX_DIR/styles/revtex4"
-# On Mac OS X Snow Leopard at Oxford this is all ignored! LaTeX just looks 
+# On Mac OS X Snow Leopard at Oxford this is all ignored! LaTeX just looks
 # where it always looks. Find this out by doing:
 #  >> kpsewhich --progname=pdflatex --show-path=.sty
 #  .:/Users/marshallp/.texlive2009/texmf-config/tex/latex//:/Users/marshallp/.texlive2009/texmf-var/tex/latex//:/Users/marshallp/Library/texmf/tex/latex//:
@@ -581,7 +566,7 @@ if (${LOCATION} == SLAC || ${LOCATION} == KIPAC) then
 #     setenv PYTHONPATH $DAPPLE/lib/rhel4/
 #   else
 #     setenv PYTHONPATH $HOME/lib/rhel5/
-#   endif 
+#   endif
   setenv PYTHONPATH ${PYTHONPATH}:$DAPPLE/lib/python2.5/site-packages
   setenv PYTHONPATH ${PYTHONPATH}:$DAPPLE/lib/python
 #   setenv PYTHONPATH ${PYTHONPATH}:$GROUP_SOFT_DIR/python/lib/2.5/site-packages
@@ -596,11 +581,11 @@ else if (${LOCATION} == MPIA) then
 
 else if (${LOCATION} == laptop) then
   setenv PYTHONPATH /usr/local/bin/python
-  
+
 else
 # BUG: pythonpath not setup for Oxford yet
   setenv PYTHONPATH /usr/bin/python
-  
+
 endif
 
 setenv PYTHONPATH ${PYTHONPATH}:${HOME}/software/APLpy-0.9.6
@@ -615,7 +600,7 @@ setenv PYTHONPATH ${TRACTOR_DIR}:${PYTHONPATH}
 setenv PYTHONPATH ${ASTROMETRY_DIR}:${PYTHONPATH}
 setenv PYTHONPATH ${STELLARPOP_DIR}/..:${PYTHONPATH}
 setenv PYTHONPATH ${HOME}/python:${PYTHONPATH}
-setenv PYTHONPATH ${HOME}/lib/python2.6/site-packages:${PYTHONPATH}
+setenv PYTHONPATH ${HOME}/python/triangle.py:${PYTHONPATH}
 setenv PYTHONPATH ${PROTO_DIR}/python:${PYTHONPATH}
 setenv PYTHONPATH ${PAPPY_DIR}:${PYTHONPATH}
 setenv PYTHONPATH ${LENSTRACTOR_DIR}:${PYTHONPATH}
@@ -668,7 +653,7 @@ setenv IDL_PATH ${IDL_PATH}:+$KCORRECT_DIR/pro
 
 if (${LOCATION} == SLAC) then
 # # BROKEN IDL path:
-# 
+#
 # source /afs/slac/g/ek/rsi/idl/bin/idl_setup
 # setenv IDL_PATH .:${IDL_DIR}/lib:${HOME}/work/pro:${HOME}/work/pro/lamlib
 # setenv IDL_PATH ${IDL_PATH}:+${IDLUTILS_DIR}/goddard/pro:+${IDLUTILS_DIR}/pro:.
@@ -684,6 +669,15 @@ if (${LOCATION} == SLAC) then
 endif
 setenv IDL_PATH ${IDL_PATH}:.
 
+#-------------------------------------------------------------------------------
+# CosmoSIS:
+
+setenv PLANCK_DATA_DIR ${COSMOSIS_SRC_DIR}/ups/planckdata/v1_1/data
+setenv PYTHONPATH ${PYTHONPATH}:${COSMOSIS_SRC_DIR}
+setenv PYTHONPATH ${PYTHONPATH}:${COSMOSIS_SRC_DIR}/cosmosis-standard-library
+setenv PATH ${PATH}:${COSMOSIS_SRC_DIR}/bin
+setenv LD_LIBRARY_PATH ${COSMOSIS_SRC_DIR}/cosmosis/datablock/:${COSMOSIS_SRC_DIR}/cosmosis-standard-library/likelihood/planck_v1:${LD_LIBRARY_PATH}
+setenv LD_RUN_PATH ${LD_LIBRARY_PATH}
 #-------------------------------------------------------------------------------
 
 # Other environment variables
@@ -711,18 +705,24 @@ endif
 # Compilers - NEEDS WORK FOR OXFORD!:
 
 if (${LOCATION} == laptop) then
-# Python installation (numpy, scipy etc) requires these - and even then,
+# Python 2.7 installation (numpy, scipy etc) requires these - and even then,
 # gfortran has to be selected explicitly:
-  setenv F77 gfortran
-  setenv CC clang
-#  setenv CC /usr/bin/gcc
-  setenv CXX /usr/bin/g++
+#  setenv F77 gfortran
+#  setenv CC clang
+#  setenv CXX /usr/bin/g++
 # Then, a bunch of python installations needed the following set:
-  setenv MACOSX_DEPLOYMENT_TARGET 10.6
-  setenv ARCH "-arch x86_64"
-  setenv CFLAGS "${ARCH}"
-  setenv FFLAGS "-static -ff2c ${ARCH}"
-  setenv LDFLAGS "-Wall -undefined dynamic_lookup ${ARCH}"
+#  setenv MACOSX_DEPLOYMENT_TARGET 10.6
+#  setenv ARCH "-arch x86_64"
+#  setenv CFLAGS "${ARCH}"
+#  setenv FFLAGS "-static -ff2c ${ARCH}"
+#  setenv LDFLAGS "-Wall -undefined dynamic_lookup ${ARCH}"
+
+# However, LSST stack needs no compilers or flags set at all, apparently.
+  unsetenv CC
+  unsetenv CXX
+  unsetenv F77
+  unsetenv FC
+
 else
   setenv CC /usr/bin/gcc
   setenv CXX /usr/bin/g++

@@ -10,7 +10,7 @@
 
 # if ( ! $?COOKIE ) then
 #   echo "Sourcing .login from .cshrc -\c"
-unsetenv COOKIE  
+unsetenv COOKIE
 source $HOME/.login
 #   echo " done"
 # endif
@@ -25,19 +25,19 @@ if (${OSTYPE} == 'darwin') then
   set linux = 0
 else if (${OSTYPE} == 'linux') then
   set darwin = 0
-  set linux = 1  
+  set linux = 1
 else
   echo "Unknown operating system ${OSTYPE}"
-  echo "Using linux setup..."  
+  echo "Using linux setup..."
   set darwin = 0
-  set linux = 1  
+  set linux = 1
 endif
 
 # Global setup for laptop:
 
 if ($darwin && ${LOCATION} != Oxford) then
   set globalinitfile = /sw/bin/init.csh
-  if ( -e $globalinitfile ) source $globalinitfile 
+  if ( -e $globalinitfile ) source $globalinitfile
 endif
 
 # Shell variables
@@ -49,7 +49,7 @@ if ( $?TERM ) then
  if ( $TERM == 'ansi' || $TERM == 'linux' ) then
 #   set prompt='%m \! > '
   set prompt = "%{\e]2\;%m:%/^g\e]1\;%m^g\r%}%n@%m > "
- else if ( $TERM == 'xterm-color' || $TERM == 'xterm' ) then
+ else if ( $TERM == 'xterm-256color' || $TERM == 'xterm-color' || $TERM == 'xterm' ) then
   set prompt = "%{\033]0;%m:%/\007%}%n@%m > "
  endif
 else
@@ -74,7 +74,7 @@ if ($LOCATION == 'laptop') then
   limit coredumpsize 0
 else
   unlimit coredumpsize
-endif  
+endif
 
 # Prompt with corrected version of command - can cause problems when
 # scripting:
@@ -92,6 +92,8 @@ alias cd 'chdir \!* ; echo $cwd'
 # 2 and 3-fingered python:
 alias py python
 alias ipy ipython
+alias notebook "ipython notebook &"
+alias nb "ipython notebook &"
 
 # Colored ls:
 if ($linux) then
@@ -116,6 +118,9 @@ alias ll 'ls -ltr'
 alias gb 'git branch'
 alias gc 'git checkout \!*'
 alias gs 'git status'
+alias gr 'git remote'
+alias gi 'git commit'
+alias ga 'git add'
 
 # Safety net - make a temporary directory and redirect rm there
 if ($linux) then
@@ -176,7 +181,7 @@ alias lj4up 'psnup -4 -pletter \!* | lp -d ${BLACK_AND_WHITE_PRINTER} ${DUPLEX_O
 alias ljcolour    'psnup -1 -pletter \!* | lp -d ${COLOUR_PRINTER} ${DUPLEX_OPTION}'
 alias lj2upcolour 'psnup -2 -pletter \!* | lp -d ${COLOUR_PRINTER} ${DUPLEX_OPTION}'
 alias lj4upcolour 'psnup -4 -pletter \!* | lp -d ${COLOUR_PRINTER} ${DUPLEX_OPTION}'
-                                                                               
+
 
 # mpeg_play:
 alias mpeg_play "${HOME}/bin/mpeg_play -dither color -quiet -controls off"
@@ -191,15 +196,16 @@ alias dvips 'dvips -f -Pcmz \!* -o \!*:r.ps; echo "Output written to \!*:r.ps"'
 alias a2ps 'a2ps -R --columns 1 \!* -o \!*:r.ps'
 
 # Short version of ps2pdf:
-alias ps2pdf 'ps2pdf -dPDFsettings=/prepress \!* ' 
+alias ps2pdf 'ps2pdf -dPDFsettings=/prepress \!* '
 
 # cvs update without the cruft:
 alias cvsup   "cvs up -d |& grep -v '?' | grep -v 'update'"
 alias svnstat "svn status |& grep -v '?'"
 
-# Kill firefox! kill python!
-alias killfirefox "kill -9 `ps -eal | grep firefox | grep -v 'grep' | awk '{print $4}'`"
-alias killpython "kill -9 `ps -eal | grep python | grep -v 'grep' | awk '{print $4}'`"
+# Kill firefox! kill python! kill ipython notebook!
+alias killfirefox "kill -l `ps -f | grep firefox | grep -v 'grep' | awk '{print $2}'` >& /dev/null"
+alias killpython "kill -l `ps -f | grep python | grep -v 'grep' | awk '{print $2}'` >& /dev/null"
+alias killnotebook "kill -l `ps -f | grep 'ipython notebook' | grep -v 'grep' | awk '{print $2}'` >& /dev/null"
 
 alias pw 'alibaba'
 
@@ -209,10 +215,10 @@ if ($VB) echo ".cshrc: use 'refresh' to rerun environment setup"
 setenv COOKIE 1
 
 # List latest files:
-alias new 'ls -latr | tail' 
+alias new 'ls -latr | tail'
 
 # Make a directory sensibly and move there:
-alias mkdirf 'mkdir -p \!* && cd \!*' 
+alias mkdirf 'mkdir -p \!* && cd \!*'
 
 # Crontab on afs - SLAC specific!:
 if (${LOCATION} == SLAC) alias crontab trscrontab
@@ -228,6 +234,14 @@ if (${LOCATION} == laptop) alias gmake make
 
 # Lenstool - dont want to put src on path:
 alias lenstool $LENSTOOL_DIR/src/lenstool
+
+# LSST stuff:
+alias LSST "source $LSST_HOME/loadLSST.csh"
+
+# CosmoSIS. The following command only works if you first
+# change shell to bash, and then of course this alias won't work.
+# This is a bug.
+alias cs "source $COSMOSIS_SRC_DIR/config/setup-cosmosis"
 
 # Remote logins:
 alias ssh "ssh -tAX"
@@ -249,8 +263,8 @@ alias killtea "kill `ps -eal | grep teatime | awk '{print $4}'`"
 
 # ds9:
 if (${LOCATION} == laptop) then
-#  alias ds9 '/Applications/SAOImage\ DS9.app/Contents/MacOS/ds9'
-  alias ds9 '/Applications/ds9'
+  alias ds9 '/Applications/SAOImage\ DS9.app/Contents/MacOS/ds9'
+#  alias ds9 '/Applications/ds9'
 endif
 
 # MrLens
@@ -276,17 +290,17 @@ endif
 #-------------------------------------------------------------------------------
 #
 # # Spam filtering by procmail - not used at KIPAC:
-# 
+#
 # alias mailjunk  'cat /u/ki/pjm/mail/.procmail.log | \ne - -with /u/ki/pjm/.procmail.ne'
 # alias mailcheck '/info/procmail/examples/mailstat -k /u/ki/pjm/mail/.procmail.log'
 # alias mailtidy  '/info/procmail/examples/mailstat /u/ki/pjm/mail/.procmail.log;echo "log file emptied..."'
 # alias maillog 'more /u/ki/pjm/mail/.procmail.log'
-# 
+#
 #===============================================================================
 
 
 # 2012-02-29 (Wednesday) 15:07 EST
-# 
+#
 # Switched to homebrew-installed python distribution (2.7.2) with Dan F-M
 
 # Setting PATH for EPD-7.1-2
