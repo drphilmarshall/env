@@ -14,7 +14,8 @@
 # INPUTS:
 #
 # OPTIONAL INPUTS:
-#   -p --passphrase  passphrase   Recommended for higher security!
+#   -p --passphrase  passphrase   Recommended for higher security! [empty]
+#   -n --new                      Make a new ssh key [don't]
 #
 # OUTPUTS:
 #
@@ -34,6 +35,7 @@
 set help = 0
 set vb = 0
 set passphrase = ""
+set new = 0
 
 while ( $#argv > 0 )
    switch ($argv[1])
@@ -55,61 +57,72 @@ while ( $#argv > 0 )
       set passphrase = "$argv[1]"
       shift argv
       breaksw
+   case -n:        #  Make new ssh key
+      shift argv
+      set new = 1
+      breaksw
+   case --{new}:        
+      shift argv
+      set new = 1
+      breaksw
    endsw
 end
 
 # Online help:
 
 if ( $help ) then
-  echo "Usage:\
-        env_make_links.csh \
-	      [-h --help] \
-  goto FINISH
+    more `which $0`  
+    goto FINISH
 endif
 
 # Make links!
 
-set SRCDIR = $HOME/cvs/env/src
+set SRCDIR = $HOME/env/src
 chdir $SRCDIR
-
-# Generate new set of keys on this host:
 
 set keychain = $SRCDIR/authorized_keys.${HOST}
 
-# rsa:
-yes | ssh-keygen -t rsa -N "$passphrase" -f ${HOME}/.ssh/id_rsa >& /dev/null
-# rsa1:
-yes | ssh-keygen -t rsa1 -N "$passphrase" -f ${HOME}/.ssh/identity >& /dev/null
-# dsa:
-yes | ssh-keygen -t dsa -N "$passphrase" -f ${HOME}/.ssh/id_dsa >& /dev/null
+if ($new) then
 
-# Concatenate into authorized keys file:
+    # Generate new set of keys on this host:
 
-cat ${HOME}/.ssh/id_rsa.pub \
-    ${HOME}/.ssh/identity.pub \
-    ${HOME}/.ssh/id_dsa.pub      > $keychain
+    # rsa:
+    yes | ssh-keygen -t rsa -N "$passphrase" -f ${HOME}/.ssh/id_rsa >& /dev/null
+    # rsa1:
+    yes | ssh-keygen -t rsa1 -N "$passphrase" -f ${HOME}/.ssh/identity >& /dev/null
+    # dsa:
+    yes | ssh-keygen -t dsa -N "$passphrase" -f ${HOME}/.ssh/id_dsa >& /dev/null
 
-echo "${0:t}: generated set of public keys for ${HOST}:"
-echo " "
-wc -l $keychain
-echo " "
-cat $keychain
-echo " "
+    # Concatenate into authorized keys file:
 
-# Check in to cvs!
+    cat ${HOME}/.ssh/id_rsa.pub \
+        ${HOME}/.ssh/identity.pub \
+        ${HOME}/.ssh/id_dsa.pub      > $keychain
 
-echo "${0:t}: checking into cvs:"
-echo " "
-cvs add $keychain:t
-cvs ci -m "" $keychain:t
+    echo "${0:t}: generated set of public keys for ${HOST}:"
+    echo " "
 
-# Now cvs update to get other keychains:
+    wc -l $keychain
+    echo " "
+    cat $keychain
+    echo " "
+
+    echo "${0:t}: checking ssh keys into repository:"
+    echo " "
+    git add $keychain:t
+    git commit -m "New ssh keys on $HOST" $keychain:t
+    git push
+
+endif
+
+# Now git pull to get other keychains:
+
 echo " "
 echo "${0:t}: updating other keychains:"
 echo " "
 
 set tmpfile = /tmp/env_make_keychains.tmp
-cvs update >& $tmpfile
+git pull >& $tmpfile
 
 grep -e authorized_keys $tmpfile
 echo " "
@@ -124,10 +137,11 @@ echo " "
 wc -l $masterchain
 echo " "
 
-echo "${0:t}: checking into cvs:"
+echo "${0:t}: checking into repository:"
 echo " "
 
-cvs ci -m "" $masterchain:t
+git commit -m "Updating keychain from $HOST" $masterchain:t
+git push
 
 echo " "
 
