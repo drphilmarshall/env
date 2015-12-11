@@ -33,7 +33,7 @@ if (${OSTYPE} == 'darwin') then
   else if ($HOST == asosx106.physics.ox.ac.uk) then
     setenv LOCATION Oxford
   else
-    setenv HOST charlie
+    setenv HOST thierry
     setenv LOCATION laptop
     setenv DISPLAY ":0.0"
 #     setenv HOME /Users/pjm
