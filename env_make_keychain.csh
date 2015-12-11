@@ -99,21 +99,22 @@ if ($new) then
         ${HOME}/.ssh/identity.pub \
         ${HOME}/.ssh/id_dsa.pub      > $keychain
 
-    echo "${0:t}: generated set of public keys for ${HOST}:"
-    echo " "
-
-    wc -l $keychain
-    echo " "
-    cat $keychain
-    echo " "
-
-    echo "${0:t}: checking ssh keys into repository:"
-    echo " "
-    git add $keychain:t
-    git commit -m "New ssh keys on $HOST" $keychain:t
-    git push
-
 endif
+
+echo "${0:t}: public keys for ${HOST}:"
+echo " "
+
+wc -l $keychain
+echo " "
+cat $keychain
+echo " "
+
+echo "${0:t}: checking ssh keys into repository:"
+echo " "
+git add $keychain:t
+git commit -m "ssh keys on $HOST" $keychain:t
+git push
+
 
 # Now git pull to get other keychains:
 
