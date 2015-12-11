@@ -553,6 +553,8 @@ if ($VB) echo ".login: setting PYTHONPATH..."
 
 if (${LOCATION} == SLAC || ${LOCATION} == KIPAC) then
 
+  setenv PYTHONPATH .
+
 # # Glenn's installation at SLAC:
 #   setenv PYTHONPATH $GROUP_SOFT_DIR/stsci_python
 #   setenv PYTHONPATH /afs/slac/g/ki/ki04/i386_linux24/soft/stsci_python:/afs/slac/g/ki/lib/python2.4/site-packages
