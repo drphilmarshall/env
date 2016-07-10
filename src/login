@@ -33,10 +33,10 @@ if (${OSTYPE} == 'darwin') then
   else if ($HOST == asosx106.physics.ox.ac.uk) then
     setenv LOCATION Oxford
   else
-    setenv HOST thierry
+    setenv HOST PPA-PC92478
     setenv LOCATION laptop
     setenv DISPLAY ":0.0"
-#     setenv HOME /Users/pjm
+    setenv HOME /Users/pjm
   endif
 
 else if (${OSTYPE} == 'linux') then
@@ -162,7 +162,17 @@ else if (${LOCATION} == MPIA) then
   setenv PS1QLS_DATA_DIR /a77d1/PS1_QLS
 
 else if (${LOCATION} == laptop) then
-  setenv LSST_HOME $HOME/lsst
+
+  # This is no longer needed with conda LSST:
+  # setenv LSST_HOME $HOME/lsst
+
+  # Instead, we need protecting against ourselves:
+  unsetenv EUPS_DIR
+  unsetenv EUPS_PATH
+
+  # LSST DESC:
+  setenv TWINKLES_DIR /Users/pjm/work/stronglensing/LSST/DESC/Twinkles
+  setenv MONITOR_DIR /Users/pjm/work/stronglensing/LSST/DESC/Monitor
 
 endif
 
@@ -236,7 +246,7 @@ endif
 # lensing analysis code:
 setenv MCADAM_DIR   ${WORK_DIR}/McAdam
 setenv IM2SHAPE_DIR ${WORK_DIR}/weaklensing/im2shape
-setenv LENSENT2_DIR ${WORK_DIR}/weaklensing/lensent2
+setenv LENSENT2_DIR ${WORK_DIR}/weaklensing/LensEnt2
 setenv LENSTOOL_DIR ${WORK_DIR}/stronglensing/lenstool
 setenv PSFENT_DIR ${WORK_DIR}/weaklensing/psfent
 setenv PROTO_DIR ${WORK_DIR}/stronglensing/PanSTARRS/proto
@@ -357,7 +367,6 @@ if (${LOCATION} == SLAC) then
 
 endif
 
-
 #-------------------------------------------------------------------------------
 
 # Paths
@@ -385,15 +394,18 @@ else if ($darwin) then
 
   if (${LOCATION} == laptop) then
 
-    # Python 2.7.2:
-    # Python executable lives in /usr/local/bin...
-    setenv PATH  /usr/local/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/texbin
+    # # Python 2.7.2:
+    # # Python executable lives in /usr/local/bin...
+    # setenv PATH  /usr/local/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/texbin
+
+    # Miniconda python 2.7:
+    setenv PATH /Users/pjm/miniconda2/bin:/usr/local/bin:/bin:/usr/bin:/usr/X11R6/bin:/usr/texbin
+
     # Packages managed by homebrew and pip:
     setenv PATH /usr/local/share/python:$PATH
 
-    # # Python 2.6.1:
-    # # Python executable lives in /usr/local/bin...
-    #     setenv PATH  /bin:/sbin:/usr/bin:/usr/local/bin:/usr/sbin:/usr/X11R6/bin:/usr/texbin
+    # TeX Live 2015
+    setenv PATH ${PATH}:/Library/TeX/texbin
 
   else if (${LOCATION} == Oxford) then
 
@@ -476,6 +488,8 @@ if (${LOCATION} == SLAC || ${LOCATION} == KIPAC) then
 endif
 
 setenv PATH $KCORRECT_DIR/bin:$PATH
+
+
 
 
 # Homegrown commands get preference:
@@ -588,14 +602,6 @@ else
 # BUG: pythonpath not setup for Oxford yet
   setenv PYTHONPATH /usr/bin/python
 
-endif
-
-setenv PYTHONPATH ${PYTHONPATH}:${HOME}/software/APLpy-0.9.6
-if (${LOCATION} == laptop) then
-#   setenv PYTHONPATH ${PYTHONPATH}:${HOME}/software/ATpy-0.9.5.1
-  setenv PYTHONPATH ${PYTHONPATH}:${HOME}/software/ATpy-0.9.5.3
-else
-  setenv PYTHONPATH ${PYTHONPATH}:${HOME}/software/ATpy-0.9.5.3
 endif
 
 setenv PYTHONPATH ${TRACTOR_DIR}:${PYTHONPATH}
@@ -734,6 +740,18 @@ else
     setenv FC /sw/bin/g77
   endif
 endif
+
+# -----------------------------------------------------------------------------
+
+# Set up laptop for LSST work:
+
+if (${LOCATION} == laptop) then
+    setenv LSST_DIR ${HOME}/miniconda2
+    setenv PATH ${LSST_DIR}/bin:$PATH
+endif
+
+# -----------------------------------------------------------------------------
+
 
 # Finally set a cookie to show that the .login has been run (allows .cshrc to
 # always run .login: all shells become login shells.

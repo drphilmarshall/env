@@ -92,8 +92,8 @@ alias cd 'chdir \!* ; echo $cwd'
 # 2 and 3-fingered python:
 alias py python
 alias ipy ipython
-alias notebook "ipython notebook &"
-alias nb "ipython notebook &"
+alias notebook "jupyter notebook &"
+alias nb "jupyter notebook &"
 
 # Colored ls:
 if ($linux) then
@@ -122,30 +122,31 @@ alias gr 'git remote'
 alias gi 'git commit'
 alias ga 'git add'
 
-# Safety net - make a temporary directory and redirect rm there
-if ($linux) then
-  setenv TRASH /tmp/${USER}
-  if ( ! -e ${TRASH} ) then
-    mkdir ${TRASH}
-    echo " "
-    echo "Created new rm directory."
-    echo " "
-  else if ( ! -d ${TRASH} ) then
-    echo " "
-    echo "${TRASH} is not a directory..."
-    /usr/bin/rm ${TRASH}
-    echo "Removed ${TRASH}"
-    mkdir ${TRASH}
-    echo "Created new rm directory"
-    echo " "
-  endif
-else if ($darwin) then
-  setenv TRASH ${HOME}/.Trash
-endif
-alias delete '/bin/rm'
-alias rm 'mv -f \!* ${TRASH}/'
-alias recover 'mv ${TRASH}/\!* .'
-alias emptytrash '/bin/rm -rf ${TRASH}/*'
+# Safety net - make a temporary directory and redirect rm there.
+# Commented out, as it interferes with PhoSim's installation.
+# if ($linux) then
+# setenv TRASH /tmp/${USER}
+# if ( ! -e ${TRASH} ) then
+#   mkdir ${TRASH}
+#   echo " "
+#   echo "Created new rm directory."
+#   echo " "
+# else if ( ! -d ${TRASH} ) then
+#   echo " "
+#   echo "${TRASH} is not a directory..."
+#   /usr/bin/rm ${TRASH}
+#   echo "Removed ${TRASH}"
+#   mkdir ${TRASH}
+#   echo "Created new rm directory"
+#   echo " "
+#   endif
+# else if ($darwin) then
+#   setenv TRASH ${HOME}/.Trash
+# endif
+# alias delete '/bin/rm'
+# alias rm 'mv -f \!* ${TRASH}/'
+# alias recover 'mv ${TRASH}/\!* .'
+# alias emptytrash '/bin/rm -rf ${TRASH}/*'
 
 
 if (${LOCATION} == SLAC) then
@@ -205,7 +206,7 @@ alias svnstat "svn status |& grep -v '?'"
 # Kill firefox! kill python! kill ipython notebook!
 alias killfirefox "kill -l `ps -f | grep firefox | grep -v 'grep' | awk '{print $2}'` >& /dev/null"
 alias killpython "kill -l `ps -f | grep python | grep -v 'grep' | awk '{print $2}'` >& /dev/null"
-alias killnotebook "kill -l `ps -f | grep 'ipython notebook' | grep -v 'grep' | awk '{print $2}'` >& /dev/null"
+alias killnotebook "kill -l `ps -f | grep 'notebook' | grep -v 'grep' | awk '{print $2}'`"
 
 alias pw 'alibaba'
 
@@ -235,13 +236,35 @@ if (${LOCATION} == laptop) alias gmake make
 # Lenstool - dont want to put src on path:
 alias lenstool $LENSTOOL_DIR/src/lenstool
 
-# LSST stuff:
-alias LSST "source $LSST_HOME/loadLSST.csh"
+
+# -----------------------------------------------------------------------------
+# LSST setup:
+
+# Conda environment:
+if (${LOCATION} == laptop) then
+    alias LSST "bash -l"
+    echo "Type 'LSST' to set up the LSST environment"
+    # Note that the source commands need to be run in bash, so they're in my
+    # bash_profile, which is run after switching to bash and insisting that that
+    # shell be a login file.
+endif
+
+# We used to need these lines as well:
+# setup sims_catUtils -t rbiswas -t b1887 ; \\
+# setenv DYLD_LIBRARY_PATH ${LSST_DIR}/opt/lsst/boost/lib ; \\
+
+# And when using the eups distribution, I needed to do:
+# alias LSST "source $LSST_HOME/loadLSST.csh"
+
+
+# -----------------------------------------------------------------------------
 
 # CosmoSIS. The following command only works if you first
 # change shell to bash, and then of course this alias won't work.
 # This is a bug.
 alias cs "source $COSMOSIS_SRC_DIR/config/setup-cosmosis"
+
+
 
 # Remote logins:
 alias ssh "ssh -tAX"
