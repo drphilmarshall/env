@@ -95,6 +95,9 @@ alias ipy ipython
 alias notebook "jupyter notebook &"
 alias nb "jupyter notebook &"
 
+# Start paper:
+alias start_paper "cookiecutter https://github.com/DarkEnergyScienceCollaboration/start_paper.git"
+
 # Colored ls:
 if ($linux) then
   setenv LS_COLORS  "no=00:fi=00:di=01;34:ln=00;36:pi=40;33:so=00;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=00;31:*.cmd=00;31:*.exe=00;31:*.com=00;31:*.tar=01;40;37:*.zip=01;40;37:*.ZIP=01;40;37:*.z=01;40;37:*.Z=01;40;37:*.gz=01;40;37:*.uu=01;40;37:*.bz2=01;40;37:*.bz=01;40;37:*.tz=01;40;37:*.jpg=00;35:*.jpeg=00;35:*.gif=00;35:*.bmp=00;35:*.xbm=00;35:*.xpm=00;35:*.ppm=00;35:*.png=00;35:*.tif=00;35:*.tiff=00;35:*.mpg=00;35:*.mpeg=00;35:*.wav=00;35:*.ps=00;35:*.eps=00;35:*.pdf=00;35:*.bib=00;32:*.tex=00;32:*.sty=00;32:*.cls=00;32:*.bst=00;32:"
@@ -121,6 +124,7 @@ alias gs 'git status'
 alias gr 'git remote'
 alias gi 'git commit'
 alias ga 'git add'
+alias grv 'git remote -v'
 
 # Safety net - make a temporary directory and redirect rm there.
 # Commented out, as it interferes with PhoSim's installation.
@@ -243,7 +247,7 @@ alias lenstool $LENSTOOL_DIR/src/lenstool
 # Conda environment:
 if (${LOCATION} == laptop) then
     alias LSST "bash -l"
-    echo "Type 'LSST' to set up the LSST environment"
+    # echo "Type 'LSST' to set up the LSST environment"
     # Note that the source commands need to be run in bash, so they're in my
     # bash_profile, which is run after switching to bash and insisting that that
     # shell be a login file.

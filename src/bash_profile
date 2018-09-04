@@ -11,3 +11,6 @@ setup lsst_sims
 # LSST DESC setup:
 source ${TWINKLES_DIR}/setup/setup.sh
 source ${MONITOR_DIR}/setup/setup.sh
+
+# added by Miniconda3 installer
+export PATH="/Users/pjm/miniconda3/bin:$PATH"

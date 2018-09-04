@@ -267,13 +267,13 @@ setenv HUMVI_DIR ${HOME}/python/HUMVI
 setenv TOON_DIR ${HOME}/python/Toons
 
 # OM10 mock lenses
-setenv OM10_DIR ${WORK_DIR}/stronglensing/OM10
+# setenv OM10_DIR ${WORK_DIR}/stronglensing/OM10
 
 # SED fitting:
 setenv STELLARPOP_DIR ${WORK_DIR}/photometry/stellarpop
 
 # Lightcone reconstruction:
-setenv PANGLOSS_DIR ${WORK_DIR}/stronglensing/H0/lightcones/Pangloss
+# setenv PANGLOSS_DIR ${WORK_DIR}/stronglensing/H0/lightcones/Pangloss
 
 # Local Group:
 setenv LOCALGROUP_DIR ${WORK_DIR}/localgroup/LocalGroupHaloProps
@@ -398,8 +398,8 @@ else if ($darwin) then
     # # Python executable lives in /usr/local/bin...
     # setenv PATH  /usr/local/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/texbin
 
-    # Miniconda python 2.7:
-    setenv PATH /Users/pjm/miniconda2/bin:/usr/local/bin:/bin:/usr/bin:/usr/X11R6/bin:/usr/texbin
+    # Miniconda python 3:
+    setenv PATH /Users/pjm/miniconda3/bin:/usr/local/bin:/bin:/usr/bin:/usr/X11R6/bin:/usr/texbin:/usr/sbin
 
     # Packages managed by homebrew and pip:
     setenv PATH /usr/local/share/python:$PATH
@@ -445,7 +445,7 @@ setenv PATH ${PATH}:${PROTO_DIR}/python
 setenv PATH ${PATH}:${PROTO_DIR}/bin
 setenv PATH ${PATH}:${PAPPY_DIR}
 setenv PATH ${PATH}:${LENSTRACTOR_DIR}
-setenv PATH ${PATH}:${PANGLOSS_DIR}
+# setenv PATH ${PATH}:${PANGLOSS_DIR}
 setenv PATH ${PATH}:${SWAP_DIR}
 setenv PATH ${PATH}:${LOCALGROUP_DIR}
 setenv PATH ${PATH}:${HUMVI_DIR}
@@ -612,13 +612,13 @@ setenv PYTHONPATH ${HOME}/python/triangle.py:${PYTHONPATH}
 setenv PYTHONPATH ${PROTO_DIR}/python:${PYTHONPATH}
 setenv PYTHONPATH ${PAPPY_DIR}:${PYTHONPATH}
 setenv PYTHONPATH ${LENSTRACTOR_DIR}:${PYTHONPATH}
-setenv PYTHONPATH ${PANGLOSS_DIR}:${PYTHONPATH}
+# setenv PYTHONPATH ${PANGLOSS_DIR}:${PYTHONPATH}
 setenv PYTHONPATH ${SWAP_DIR}:${PYTHONPATH}
 setenv PYTHONPATH ${LOCALGROUP_DIR}:${PYTHONPATH}
 setenv PYTHONPATH ${HUMVI_DIR}:${PYTHONPATH}
 setenv PYTHONPATH ${TOON_DIR}:${PYTHONPATH}
 setenv PYTHONPATH ${EMCEE_DIR}:${PYTHONPATH}
-setenv PYTHONPATH ${OM10_DIR}:${PYTHONPATH}
+# setenv PYTHONPATH ${OM10_DIR}:${PYTHONPATH}
 setenv PYTHONPATH .:${PYTHONPATH}
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ----
@@ -686,7 +686,13 @@ setenv PYTHONPATH ${PYTHONPATH}:${COSMOSIS_SRC_DIR}/cosmosis-standard-library
 setenv PATH ${PATH}:${COSMOSIS_SRC_DIR}/bin
 setenv LD_LIBRARY_PATH ${COSMOSIS_SRC_DIR}/cosmosis/datablock/:${COSMOSIS_SRC_DIR}/cosmosis-standard-library/likelihood/planck_v1:${LD_LIBRARY_PATH}
 setenv LD_RUN_PATH ${LD_LIBRARY_PATH}
+
 #-------------------------------------------------------------------------------
+# Tokens:
+setenv ADS_API_TOKEN "m94xLFH3lT6PlrVlepgVmmLiQKZikCkOJkFH38me"
+setenv GITHUB_API_TOKEN "149a502d6a93db4829c51dacb0de41709b5ca1d5"
+setenv GITHUB_API_KEY "ef2c4d902474d6bb840a32b33d449aa14c8a7487"
+setenv GITHUB_USERNAME "drphilmarshall"
 
 # Other environment variables
 # ***************************
@@ -744,11 +750,12 @@ endif
 # -----------------------------------------------------------------------------
 
 # Set up laptop for LSST work:
-
-if (${LOCATION} == laptop) then
-    setenv LSST_DIR ${HOME}/miniconda2
-    setenv PATH ${LSST_DIR}/bin:$PATH
-endif
+#
+# if (${LOCATION} == laptop) then
+#     setenv LSST_DIR ${HOME}/miniconda2
+#     setenv PATH ${LSST_DIR}/bin:$PATH
+# endif
+# Commented out 2018-09-02 when installing miniconda3
 
 # -----------------------------------------------------------------------------
 

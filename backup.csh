@@ -1,12 +1,12 @@
 #! /bin/tcsh
-# ==============================================================================
+# ======================================================================
 #+
 # NAME:
 #   backup.csh
 #
 # PURPOSE:
 #   Backup the relevant contents of home space to SLAC.
-# 
+#
 # COMMENTS:
 #   Can expect something like 5Mb per second to UCSB.
 #   Should be used as a cron job, with cron table something like:
@@ -16,16 +16,16 @@
 # INPUTS:
 #
 # OPTIONAL INPUTS:
-#   -r --reverse       Reverse the direction (ie import from the backup directory? [0] 
-#   -s --synchronize   Synchronize (ie first backup, then import)? [0] 
-#   -d --delete        Repeat deletion of files in other location? [0] 
-#   --remote-host      Name of remote host to backup to [pjm@ki-rh6.slac.stanford.edu] 
-#   --remote-dir       Name of remote directory to backup into [/nfs/slac/g/ki/ki09/pjm] 
-#   --local-dir        Name of local directory to backup from [$HOME] 
-#   --monitor dt       Repeat backup every dt seconds [0] 
-#   -m --mail address  Send email on completion [0] 
-#   -v --verbose       Verbose output? [0] 
-#   -h --help    
+#   -r --reverse       Reverse the direction (ie import from the backup directory? [0]
+#   -s --synchronize   Synchronize (ie first backup, then import)? [0]
+#   -d --delete        Repeat deletion of files in other location? [0]
+#   --remote-host      Name of remote host to backup to [pjm@ki-rh6.slac.stanford.edu]
+#   --remote-dir       Name of remote directory to backup into [/nfs/slac/g/ki/ki09/pjm]
+#   --local-dir        Name of local directory to backup from [$HOME]
+#   --monitor dt       Repeat backup every dt seconds [0]
+#   -m --mail address  Send email on completion [0]
+#   -v --verbose       Verbose output? [0]
+#   -h --help
 #
 # OUTPUTS:
 #
@@ -34,15 +34,15 @@
 #
 #   backup.csh -v -r -m 20 b \
 #      --local-dir /sdata907/nirc9/2007sep29 \
-#      --remote-host pjm@tartufo.physics.ucsb.edu   
-#      --remote-dir /data1/homedirs/gavazzi/public_html/SL2S/NIRC2070928/data  
+#      --remote-host pjm@tartufo.physics.ucsb.edu
+#      --remote-dir /data1/homedirs/gavazzi/public_html/SL2S/NIRC2070928/data
 #
 # BUGS:
 #
 # REVISION HISTORY:
 #   2006-09-21  started Marshall  (UCSB)
 #-
-# ==============================================================================
+# ======================================================================
 
 # Default options:
 
@@ -56,6 +56,7 @@ set email = 0
 set address = 0
 set rhost = 'pjm@ki-ls07.slac.stanford.edu'
 set rdir = '/nfs/slac/g/ki/ki19/pjm'
+set wdir = '/nfs/slac/g/ki/ki09/pjm'
 set ldir = $HOME
 
 set dirs = ()
@@ -66,7 +67,7 @@ while ( $#argv > 0 )
       shift argv
       set help = 1
       breaksw
-   case --{help}:        
+   case --{help}:
       shift argv
       set help = 1
       breaksw
@@ -74,25 +75,25 @@ while ( $#argv > 0 )
       shift argv
       set vb = 1
       breaksw
-   case --{verbose}:        
+   case --{verbose}:
       shift argv
       set vb = 1
       breaksw
-   case -d:        #  Use delete option to cull missing files 
+   case -d:        #  Use delete option to cull missing files
       shift argv
       set delete = 1
       breaksw
-   case --{delete}:        
+   case --{delete}:
       shift argv
       set delete = 1
       breaksw
-   case -m:         #  Send email when done 
+   case -m:         #  Send email when done
       shift argv
       set email = 1
       set address = $argv[1]
       shift argv
       breaksw
-   case --{monitor}: #  Monitoring every dt secs       
+   case --{monitor}: #  Monitoring every dt secs
       shift argv
       set dt = $argv[1]
       shift argv
@@ -136,10 +137,10 @@ while ( $#argv > 0 )
       shift argv
       set here = `echo "$cwd:h" | sed s_${ldir}_''_g`
       set ldir = $cwd:h
-      set rdir = ${rdir}${here} 
+      set rdir = ${rdir}${here}
       set dirs = ( $dirs $cwd:t )
       breaksw
-   case *:         
+   case *:
       set dirs = ( $dirs $argv[1] )
       shift argv
       breaksw
@@ -152,7 +153,7 @@ if ( $help ) then
   print_script_header.csh $0
   goto FINISH
 endif
-  
+
 # List of directories to back up:
 
 if ($#dirs == 0) then
@@ -171,23 +172,23 @@ if ($#dirs == 0) then
 else
   echo "Custom directory set selected for backup:"
   foreach k ( `seq $#dirs` )
-   set fail = `ls $ldir/$dirs[$k] | & grep "No such" | wc -l`  
-   if ($fail) then 
+   set fail = `\ls $ldir/$dirs[$k] | & grep "No such" | wc -l`
+   if ($fail) then
     echo "  $ldir/$dirs[$k] could not be found, skipping"
     set dirs[$k] = 0
    else
     echo "  $ldir/$dirs[$k]"
-   endif    
+   endif
   end
-endif    
-    
+endif
+
 # ------------------------------------------------------------------------------
 # Using rsync to synchronise between here and SLAC:
-#  - by default do not use --delete - side effect is that you have to remove 
+#  - by default do not use --delete - side effect is that you have to remove
 #    files in both places or else both filesystems will continue to grow!
 #  - use -u to only update older files
-#  - import first, then export? Doesn't matter as -u checks times and keeps the 
-#    most recent version. If you want to merge changes in files use git 
+#  - import first, then export? Doesn't matter as -u checks times and keeps the
+#    most recent version. If you want to merge changes in files use git
 
 set command = "rsync -rptgoDzu"
 set command = "$command --exclude-from=${HOME}/.rsync-exclude"
@@ -197,7 +198,7 @@ if ($vb) then
 else
   set command = "$command -q"
 endif
-    
+
 BEGIN:
 
 # ------------------------------------------------------------------------------
@@ -208,16 +209,22 @@ if ($forward) then
  foreach dir ( $dirs )
 
   if ($dir == 0) goto NEXTB
-  
-  echo "Backing up directory to \
-  ${rhost}:${rdir}/${dir}"
 
-  echo "$command ${ldir}/${dir}/ ${rhost}:${rdir}/${dir}/" \
+  if ($dir == public_html) then
+      set remotedir = $wdir
+  else
+      set remotedir = $rdir
+  endif
+
+  echo "Backing up directory to \
+  ${rhost}:${remotedir}/${dir}"
+
+  echo "$command ${ldir}/${dir}/ ${rhost}:${remotedir}/${dir}/" \
         > /tmp/backup.csh
-        
-  source /tmp/backup.csh      
-  
-NEXTB:  
+
+  source /tmp/backup.csh
+
+NEXTB:
  end
 
 endif
@@ -230,16 +237,22 @@ if ($reverse) then
  foreach dir ( $dirs )
 
   if ($dir == 0) goto NEXTR
-  
+
+  if ($dir == public_html) then
+      set remotedir = $wdir
+  else
+      set remotedir = $rdir
+  endif
+
   echo "Importing directory from \
-  ${rhost}:${rdir}/${dir}"
+  ${rhost}:${remotedir}/${dir}"
 
-  echo "$command ${rhost}:${rdir}/${dir}/ ${ldir}/${dir}/" \
+  echo "$command ${rhost}:${remotedir}/${dir}/ ${ldir}/${dir}/" \
         > /tmp/backup.csh
-        
-  source /tmp/backup.csh      
 
-NEXTR:  
+  source /tmp/backup.csh
+
+NEXTR:
  end
 
 endif
@@ -259,9 +272,9 @@ endif
 # Send email when done?
 
 if ($email == 1) then
-  
+
   set message = "/tmp/backup.email"
-  \rm -f $message                
+  \rm -f $message
   set date = `now`
 
   echo "\
@@ -270,7 +283,7 @@ Morning!\
 \
 The following directories were backed up to ${rhost} at ${date}:\
 " >! $message
-  
+
   foreach k ( `seq $#dirs` )
     echo "  $ldir/$dirs[$k]" >> $message
   end
@@ -282,7 +295,7 @@ Best wishes,\
 " >> $message
 
   mail -s "backup.csh was successful!" "$address" < $message
-  
+
   echo "Report email sent to $address"
 
 endif
@@ -292,4 +305,3 @@ endif
 FINISH:
 
 # ==============================================================================
-
