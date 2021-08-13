@@ -7,3 +7,8 @@ GSSAPIDelegateCredentials yes
 ### Forward (delegate) credentials to the server. The default is
 # ``no''. Note that this option applies to protocol version 2
 # only.
+
+Host *
+  AddKeysToAgent yes
+  UseKeychain yes
+  IdentityFile ~/.ssh/id_rsa

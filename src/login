@@ -691,7 +691,7 @@ setenv LD_RUN_PATH ${LD_LIBRARY_PATH}
 # Tokens:
 setenv ADS_API_TOKEN "m94xLFH3lT6PlrVlepgVmmLiQKZikCkOJkFH38me"
 setenv GITHUB_API_TOKEN "149a502d6a93db4829c51dacb0de41709b5ca1d5"
-setenv GITHUB_API_KEY "ef2c4d902474d6bb840a32b33d449aa14c8a7487"
+setenv GITHUB_API_KEY "f88eddf6d37be2233a00df11788516d0fc1b832e"
 setenv GITHUB_USERNAME "drphilmarshall"
 
 # Other environment variables

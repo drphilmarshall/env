@@ -54,9 +54,12 @@ set delete = 0
 set dt = 0
 set email = 0
 set address = 0
-set rhost = 'pjm@ki-ls07.slac.stanford.edu'
-set rdir = '/nfs/slac/g/ki/ki19/pjm'
-set wdir = '/nfs/slac/g/ki/ki09/pjm'
+# set rhost = 'pjm@ki-ls07.slac.stanford.edu'
+# set rdir = '/nfs/slac/g/ki/ki19/pjm'
+# set wdir = '/nfs/slac/g/ki/ki09/pjm'
+set rhost = 'pjm@sdf.slac.stanford.edu'
+set rdir = '/sdf/group/kipac/u/pjm/ki19/'
+set wdir = '/sdf/group/kipac/u/pjm/ki09/'
 set ldir = $HOME
 
 set dirs = ()
