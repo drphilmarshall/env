@@ -6,7 +6,7 @@
 #
 # PURPOSE:
 #   Make sure the links in the home directory are set up right.
-# 
+#
 # COMMENTS:
 #
 # INPUTS:
@@ -19,7 +19,7 @@
 #
 # EXAMPLES:
 #   env_make_links.csh -v
-#   
+#
 #
 # BUGS:
 #
@@ -40,7 +40,7 @@ while ( $#argv > 0 )
       shift argv
       set help = 1
       breaksw
-   case --{help}:        
+   case --{help}:
       shift argv
       set help = 1
       breaksw
@@ -48,7 +48,7 @@ while ( $#argv > 0 )
       shift argv
       set vb = 1
       breaksw
-   case --{verbose}:        
+   case --{verbose}:
       shift argv
       set vb = 1
       breaksw
@@ -56,7 +56,7 @@ while ( $#argv > 0 )
       shift argv
       set klobber = 1
       breaksw
-   case --{force}:        
+   case --{force}:
       shift argv
       set klobber = 1
       breaksw
@@ -89,16 +89,16 @@ foreach source ( $sources )
   set remotefile = $SRCDIR/$source
   set target = .${source:t}
   echo "$target -> $remotefile"
-  
+
   if ( -e $target && $klobber == 0 ) then
     if ($vb) echo "  $target exists, skipping"
   else
     \rm -f $target
     ln -s $remotefile $target
     if ($vb) echo "  Made soft link $target"
-  endif  
+  endif
 end
-      
+
 
 # And finally do ssh keys and config:
 
@@ -114,7 +114,7 @@ else
   \rm -f $target
   ln -s $remotefile $target
   if ($vb) echo "  Made soft link $target"
-endif 
+endif
 
 set here = ${HOME}/.ssh/.public
 mkdir -p ${here}
@@ -129,7 +129,7 @@ else
   \rm -f $target
   ln -s $remotefile $target
   if ($vb) echo "  Made soft link $target"
-endif 
+endif
 
 set here = ${HOME}/.ssh
 chdir $here

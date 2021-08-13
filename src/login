@@ -33,10 +33,10 @@ if (${OSTYPE} == 'darwin') then
   else if ($HOST == asosx106.physics.ox.ac.uk) then
     setenv LOCATION Oxford
   else
-    setenv HOST thierry
+    setenv HOST PPA-PC92478
     setenv LOCATION laptop
     setenv DISPLAY ":0.0"
-#     setenv HOME /Users/pjm
+    setenv HOME /Users/pjm
   endif
 
 else if (${OSTYPE} == 'linux') then
@@ -162,7 +162,17 @@ else if (${LOCATION} == MPIA) then
   setenv PS1QLS_DATA_DIR /a77d1/PS1_QLS
 
 else if (${LOCATION} == laptop) then
-  setenv LSST_HOME $HOME/lsst
+
+  # This is no longer needed with conda LSST:
+  # setenv LSST_HOME $HOME/lsst
+
+  # Instead, we need protecting against ourselves:
+  unsetenv EUPS_DIR
+  unsetenv EUPS_PATH
+
+  # LSST DESC:
+  setenv TWINKLES_DIR /Users/pjm/work/stronglensing/LSST/DESC/Twinkles
+  setenv MONITOR_DIR /Users/pjm/work/stronglensing/LSST/DESC/Monitor
 
 endif
 
@@ -236,7 +246,7 @@ endif
 # lensing analysis code:
 setenv MCADAM_DIR   ${WORK_DIR}/McAdam
 setenv IM2SHAPE_DIR ${WORK_DIR}/weaklensing/im2shape
-setenv LENSENT2_DIR ${WORK_DIR}/weaklensing/lensent2
+setenv LENSENT2_DIR ${WORK_DIR}/weaklensing/LensEnt2
 setenv LENSTOOL_DIR ${WORK_DIR}/stronglensing/lenstool
 setenv PSFENT_DIR ${WORK_DIR}/weaklensing/psfent
 setenv PROTO_DIR ${WORK_DIR}/stronglensing/PanSTARRS/proto
@@ -257,13 +267,13 @@ setenv HUMVI_DIR ${HOME}/python/HUMVI
 setenv TOON_DIR ${HOME}/python/Toons
 
 # OM10 mock lenses
-setenv OM10_DIR ${WORK_DIR}/stronglensing/OM10
+# setenv OM10_DIR ${WORK_DIR}/stronglensing/OM10
 
 # SED fitting:
 setenv STELLARPOP_DIR ${WORK_DIR}/photometry/stellarpop
 
 # Lightcone reconstruction:
-setenv PANGLOSS_DIR ${WORK_DIR}/stronglensing/H0/lightcones/Pangloss
+# setenv PANGLOSS_DIR ${WORK_DIR}/stronglensing/H0/lightcones/Pangloss
 
 # Local Group:
 setenv LOCALGROUP_DIR ${WORK_DIR}/localgroup/LocalGroupHaloProps
@@ -357,7 +367,6 @@ if (${LOCATION} == SLAC) then
 
 endif
 
-
 #-------------------------------------------------------------------------------
 
 # Paths
@@ -385,15 +394,18 @@ else if ($darwin) then
 
   if (${LOCATION} == laptop) then
 
-    # Python 2.7.2:
-    # Python executable lives in /usr/local/bin...
-    setenv PATH  /usr/local/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/texbin
+    # # Python 2.7.2:
+    # # Python executable lives in /usr/local/bin...
+    # setenv PATH  /usr/local/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/texbin
+
+    # Miniconda python 3:
+    setenv PATH /Users/pjm/miniconda3/bin:/usr/local/bin:/bin:/usr/bin:/usr/X11R6/bin:/usr/texbin:/usr/sbin
+
     # Packages managed by homebrew and pip:
     setenv PATH /usr/local/share/python:$PATH
 
-    # # Python 2.6.1:
-    # # Python executable lives in /usr/local/bin...
-    #     setenv PATH  /bin:/sbin:/usr/bin:/usr/local/bin:/usr/sbin:/usr/X11R6/bin:/usr/texbin
+    # TeX Live 2015
+    setenv PATH ${PATH}:/Library/TeX/texbin
 
   else if (${LOCATION} == Oxford) then
 
@@ -433,7 +445,7 @@ setenv PATH ${PATH}:${PROTO_DIR}/python
 setenv PATH ${PATH}:${PROTO_DIR}/bin
 setenv PATH ${PATH}:${PAPPY_DIR}
 setenv PATH ${PATH}:${LENSTRACTOR_DIR}
-setenv PATH ${PATH}:${PANGLOSS_DIR}
+# setenv PATH ${PATH}:${PANGLOSS_DIR}
 setenv PATH ${PATH}:${SWAP_DIR}
 setenv PATH ${PATH}:${LOCALGROUP_DIR}
 setenv PATH ${PATH}:${HUMVI_DIR}
@@ -476,6 +488,8 @@ if (${LOCATION} == SLAC || ${LOCATION} == KIPAC) then
 endif
 
 setenv PATH $KCORRECT_DIR/bin:$PATH
+
+
 
 
 # Homegrown commands get preference:
@@ -590,14 +604,6 @@ else
 
 endif
 
-setenv PYTHONPATH ${PYTHONPATH}:${HOME}/software/APLpy-0.9.6
-if (${LOCATION} == laptop) then
-#   setenv PYTHONPATH ${PYTHONPATH}:${HOME}/software/ATpy-0.9.5.1
-  setenv PYTHONPATH ${PYTHONPATH}:${HOME}/software/ATpy-0.9.5.3
-else
-  setenv PYTHONPATH ${PYTHONPATH}:${HOME}/software/ATpy-0.9.5.3
-endif
-
 setenv PYTHONPATH ${TRACTOR_DIR}:${PYTHONPATH}
 setenv PYTHONPATH ${ASTROMETRY_DIR}:${PYTHONPATH}
 setenv PYTHONPATH ${STELLARPOP_DIR}/..:${PYTHONPATH}
@@ -606,13 +612,13 @@ setenv PYTHONPATH ${HOME}/python/triangle.py:${PYTHONPATH}
 setenv PYTHONPATH ${PROTO_DIR}/python:${PYTHONPATH}
 setenv PYTHONPATH ${PAPPY_DIR}:${PYTHONPATH}
 setenv PYTHONPATH ${LENSTRACTOR_DIR}:${PYTHONPATH}
-setenv PYTHONPATH ${PANGLOSS_DIR}:${PYTHONPATH}
+# setenv PYTHONPATH ${PANGLOSS_DIR}:${PYTHONPATH}
 setenv PYTHONPATH ${SWAP_DIR}:${PYTHONPATH}
 setenv PYTHONPATH ${LOCALGROUP_DIR}:${PYTHONPATH}
 setenv PYTHONPATH ${HUMVI_DIR}:${PYTHONPATH}
 setenv PYTHONPATH ${TOON_DIR}:${PYTHONPATH}
 setenv PYTHONPATH ${EMCEE_DIR}:${PYTHONPATH}
-setenv PYTHONPATH ${OM10_DIR}:${PYTHONPATH}
+# setenv PYTHONPATH ${OM10_DIR}:${PYTHONPATH}
 setenv PYTHONPATH .:${PYTHONPATH}
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ----
@@ -680,7 +686,13 @@ setenv PYTHONPATH ${PYTHONPATH}:${COSMOSIS_SRC_DIR}/cosmosis-standard-library
 setenv PATH ${PATH}:${COSMOSIS_SRC_DIR}/bin
 setenv LD_LIBRARY_PATH ${COSMOSIS_SRC_DIR}/cosmosis/datablock/:${COSMOSIS_SRC_DIR}/cosmosis-standard-library/likelihood/planck_v1:${LD_LIBRARY_PATH}
 setenv LD_RUN_PATH ${LD_LIBRARY_PATH}
+
 #-------------------------------------------------------------------------------
+# Tokens:
+setenv ADS_API_TOKEN "m94xLFH3lT6PlrVlepgVmmLiQKZikCkOJkFH38me"
+setenv GITHUB_API_TOKEN "149a502d6a93db4829c51dacb0de41709b5ca1d5"
+setenv GITHUB_API_KEY "f88eddf6d37be2233a00df11788516d0fc1b832e"
+setenv GITHUB_USERNAME "drphilmarshall"
 
 # Other environment variables
 # ***************************
@@ -734,6 +746,19 @@ else
     setenv FC /sw/bin/g77
   endif
 endif
+
+# -----------------------------------------------------------------------------
+
+# Set up laptop for LSST work:
+#
+# if (${LOCATION} == laptop) then
+#     setenv LSST_DIR ${HOME}/miniconda2
+#     setenv PATH ${LSST_DIR}/bin:$PATH
+# endif
+# Commented out 2018-09-02 when installing miniconda3
+
+# -----------------------------------------------------------------------------
+
 
 # Finally set a cookie to show that the .login has been run (allows .cshrc to
 # always run .login: all shells become login shells.

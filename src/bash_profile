@@ -1,0 +1,16 @@
+
+# added by Miniconda2 3.19.0 installer
+export PATH="/Users/pjm/miniconda2/bin:$PATH"
+
+# LSST setup:
+source activate lsst
+source eups-setups.sh
+setup obs_lsstSim
+setup lsst_sims
+
+# LSST DESC setup:
+source ${TWINKLES_DIR}/setup/setup.sh
+source ${MONITOR_DIR}/setup/setup.sh
+
+# added by Miniconda3 installer
+export PATH="/Users/pjm/miniconda3/bin:$PATH"
