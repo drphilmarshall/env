@@ -43,9 +43,9 @@ else if (${OSTYPE} == 'linux') then
   set darwin = 0
   set linux = 1
   set test = `echo $HOST | cut -c1-2`
-  if (${test} == ki || ${test} == no) then
+  if (${test} == ki || ${test} == no || ${test} == sd || ${test} == bu) then
     setenv LOCATION SLAC
-    setenv HOME /u/ki/pjm
+    # setenv HOME /u/ki/pjm
   else if (${HOST} == phil-desktop) then
     setenv LOCATION KIPAC
     setenv HOME /home/pjm
