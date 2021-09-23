@@ -33,7 +33,8 @@ if (${OSTYPE} == 'darwin') then
   else if ($HOST == asosx106.physics.ox.ac.uk) then
     setenv LOCATION Oxford
   else
-    setenv HOST PPA-PC92478
+#    setenv HOST PPA-PC92478
+    setenv HOST PC99233
     setenv LOCATION laptop
     setenv DISPLAY ":0.0"
     setenv HOME /Users/pjm
@@ -399,7 +400,10 @@ else if ($darwin) then
     # setenv PATH  /usr/local/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/texbin
 
     # Miniconda python 3:
-    setenv PATH /Users/pjm/miniconda3/bin:/usr/local/bin:/bin:/usr/bin:/usr/X11R6/bin:/usr/texbin:/usr/sbin
+    # setenv PATH /Users/pjm/miniconda3/bin:/usr/local/bin:/bin:/usr/bin:/usr/X11R6/bin:/usr/texbin:/usr/sbin
+
+    # Anaconda python 3:
+    setenv PATH /Users/pjm/anaconda3/bin:/usr/local/bin:/bin:/usr/bin:/usr/X11R6/bin:/usr/texbin:/usr/sbin    
 
     # Packages managed by homebrew and pip:
     setenv PATH /usr/local/share/python:$PATH
