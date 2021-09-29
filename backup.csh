@@ -193,7 +193,7 @@ endif
 #  - import first, then export? Doesn't matter as -u checks times and keeps the
 #    most recent version. If you want to merge changes in files use git
 
-set command = "rsync -rptgoDzu"
+set command = "rsync -rptgoDzu --timeout=0"
 set command = "$command --exclude-from=${HOME}/.rsync-exclude"
 if ($delete) set command = "$command --delete"
 if ($vb) then
