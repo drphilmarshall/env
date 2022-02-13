@@ -5,10 +5,10 @@
 #   env_make_keychain.csh
 #
 # PURPOSE:
-#   Cut a set of ssh keys for this host, copy to env/src directory, 
+#   Cut a set of ssh keys for this host, copy to env/src directory,
 #   and synchronize with other keychains. Idea is to run this script on all
-#   machines, and then cvsup, env_make_links on all machines
-# 
+#   machines, and then git merge, env_make_links on all machines
+#
 # COMMENTS:
 #
 # INPUTS:
@@ -21,7 +21,7 @@
 #
 # EXAMPLES:
 #   env_make_keychain.csh
-#   
+#
 # BUGS:
 #   - incomplete header documentation
 #
@@ -43,7 +43,7 @@ while ( $#argv > 0 )
       shift argv
       set help = 1
       breaksw
-   case --{help}:        
+   case --{help}:
       shift argv
       set help = 1
       breaksw
@@ -52,7 +52,7 @@ while ( $#argv > 0 )
       set passphrase = "$argv[1]"
       shift argv
       breaksw
-   case --{passphrase}:        
+   case --{passphrase}:
       shift argv
       set passphrase = "$argv[1]"
       shift argv
@@ -61,7 +61,7 @@ while ( $#argv > 0 )
       shift argv
       set new = 1
       breaksw
-   case --{new}:        
+   case --{new}:
       shift argv
       set new = 1
       breaksw
@@ -71,7 +71,7 @@ end
 # Online help:
 
 if ( $help ) then
-    more `which $0`  
+    more `which $0`
     goto FINISH
 endif
 
