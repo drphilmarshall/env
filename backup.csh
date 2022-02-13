@@ -170,7 +170,9 @@ if ($#dirs == 0) then
               python\
               scriptutils\
               travel\
-              )
+              Music\
+              Pictures\
+             )
   echo "Standard directory set selected for backup"
 else
   echo "Custom directory set selected for backup:"
